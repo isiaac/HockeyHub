@@ -42,6 +42,7 @@ export default function RootLayout() {
         <Stack.Screen name="rink-dashboard" />
         <Stack.Screen name="team-import" />
         <Stack.Screen name="booking-request" />
+        <Stack.Screen name="schedule-game" />
         <Stack.Screen name="+not-found" />
       </Stack>
       <StatusBar style="auto" />

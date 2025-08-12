@@ -551,6 +551,7 @@ export default function GamesScreen() {
           >
             <Text style={styles.rinkButtonText}>Rink Dashboard</Text>
           </TouchableOpacity>
+          onPress={() => router.push('/schedule-game')}
           <TouchableOpacity style={styles.addButton}>
           <Plus size={24} color="#FFFFFF" />
         </TouchableOpacity>
