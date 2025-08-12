@@ -695,8 +695,8 @@ export default function RinkDashboard() {
                     <Text style={styles.substituteStatLabel}>USA Hockey Verified</Text>
                   </View>
                   <View style={styles.substituteStatCard}>
-                    <Text style={styles.substituteStatValue}>8</Text>
-                    <Text style={styles.substituteStatLabel}>Used This Week</Text>
+                    <Text style={styles.substituteStatValue}>156</Text>
+                    <Text style={styles.substituteStatLabel}>Total Penalty Minutes</Text>
                   </View>
                 </View>
 
