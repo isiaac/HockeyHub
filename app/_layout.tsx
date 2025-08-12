@@ -38,6 +38,7 @@ export default function RootLayout() {
         <Stack.Screen name="chat" />
         <Stack.Screen name="subscription" />
         <Stack.Screen name="player-profile" />
+        <Stack.Screen name="profile" />
         <Stack.Screen name="rink-dashboard" />
         <Stack.Screen name="team-import" />
         <Stack.Screen name="booking-request" />
