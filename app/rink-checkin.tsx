@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, Alert } from 'react-native';
 import { router } from 'expo-router';
-import { Search, Users, Clock, CheckCircle, XCircle, ArrowLeft } from 'lucide-react-native';
+import { Search, Users, Clock, CircleCheck as CheckCircle, Circle as XCircle, ArrowLeft } from 'lucide-react-native';
 
 interface Player {
   id: string;
