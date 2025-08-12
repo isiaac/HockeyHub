@@ -34,6 +34,33 @@ export class GameStatsService {
     }
   }
 
+  static async createLiveGameFromSchedule(timeSlotId: string, homeTeam: string, awayTeam: string): Promise<LiveGame> {
+    try {
+      const liveGame: LiveGame = {
+        id: `live-${timeSlotId}`,
+        homeTeam: { id: 'team-home', name: homeTeam, score: 0 },
+        awayTeam: { id: 'team-away', name: awayTeam, score: 0 },
+        period: 1,
+        timeRemaining: '20:00',
+        status: 'in_progress',
+        venue: 'Central Ice Arena - Rink 1',
+        startTime: new Date().toLocaleTimeString(),
+        players: this.getMockPlayers(),
+        events: [],
+        penalties: { home: 0, away: 0 },
+        shots: { home: 0, away: 0 },
+        rinkId: 'rink-1',
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      };
+
+      this.games.set(liveGame.id, liveGame);
+      return liveGame;
+    } catch (error) {
+      throw new Error('Failed to create live game');
+    }
+  }
+
   static async getGameById(gameId: string): Promise<LiveGame | null> {
     try {
       // Check local cache first
@@ -86,9 +113,37 @@ export class GameStatsService {
               break;
             case 'penalty':
               newStats.penaltyMinutes = Math.max(0, newStats.penaltyMinutes + (update.penaltyMinutes || 2));
+              // Update team penalty count
+              if (update.value > 0) {
+                if (player.team === 'home') {
+                  game.penalties.home++;
+                } else {
+                  game.penalties.away++;
+                }
+              } else if (update.value < 0) {
+                if (player.team === 'home') {
+                  game.penalties.home = Math.max(0, game.penalties.home - 1);
+                } else {
+                  game.penalties.away = Math.max(0, game.penalties.away - 1);
+                }
+              }
               break;
             case 'shot':
               newStats.shots = Math.max(0, newStats.shots + update.value);
+              // Update team shots
+              if (update.value > 0) {
+                if (player.team === 'home') {
+                  game.shots.home++;
+                } else {
+                  game.shots.away++;
+                }
+              } else if (update.value < 0) {
+                if (player.team === 'home') {
+                  game.shots.home = Math.max(0, game.shots.home - 1);
+                } else {
+                  game.shots.away = Math.max(0, game.shots.away - 1);
+                }
+              }
               break;
             case 'hit':
               newStats.hits = Math.max(0, newStats.hits + update.value);
@@ -99,6 +154,7 @@ export class GameStatsService {
             case 'save':
               if (player.position === 'G') {
                 newStats.saves = Math.max(0, (newStats.saves || 0) + update.value);
+                newStats.shotsAgainst = Math.max(0, (newStats.shotsAgainst || 0) + update.value);
               }
               break;
           }
@@ -161,9 +217,18 @@ export class GameStatsService {
       // 5. Send notifications to teams
 
       await this.saveGameToDatabase(finalGame);
+      
+      // Update the original time slot status
+      await this.updateTimeSlotStatus(gameId, 'completed');
     } catch (error) {
       throw error;
     }
+  }
+
+  private static async updateTimeSlotStatus(gameId: string, status: 'completed'): Promise<void> {
+    // In production, update the corresponding time slot status
+    await new Promise(resolve => setTimeout(resolve, 300));
+    console.log(`Updated time slot status for game ${gameId} to ${status}`);
   }
 
   private static async saveGameToDatabase(game: LiveGame): Promise<void> {

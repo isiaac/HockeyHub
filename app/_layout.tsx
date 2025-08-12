@@ -34,6 +34,7 @@ export default function RootLayout() {
         <Stack.Screen name="(auth)" />
         <Stack.Screen name="(tabs)" />
         <Stack.Screen name="scorekeeper" />
+        <Stack.Screen name="live-scorekeeper" />
         <Stack.Screen name="game-details" />
         <Stack.Screen name="chat" />
         <Stack.Screen name="subscription" />

@@ -1,11 +1,13 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Dimensions, TextInput } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Chrome as Home, Users, Calendar, Settings, LogOut, Plus, Search, Filter, Bell, ChevronDown, Building, Trophy, UserCheck, RotateCcw, Eye, Star, Shield, MapPin, Mail, Phone } from 'lucide-react-native';
+import { Chrome as Home, Users, Calendar, Settings, LogOut, Plus, Search, Filter, Bell, ChevronDown, Building, Trophy, UserCheck, RotateCcw, Eye, Star, Shield, MapPin, Mail, Phone, Play, Clock } from 'lucide-react-native';
 import { router } from 'expo-router';
 import { AuthGuard } from '@/components/AuthGuard';
 import { useAuth } from '@/contexts/AuthContext';
 import { FreeAgentProfile } from '@/types/freeAgent';
+import { LiveGame } from '@/types/gameStats';
+import { GameStatsService } from '@/services/gamestatsService';
 
 const { width } = Dimensions.get('window');
 
@@ -224,10 +226,28 @@ export default function RinkDashboard() {
   const { logout } = useAuth();
   const [activeSection, setActiveSection] = useState('home');
   const [searchQuery, setSearchQuery] = useState('');
+  const [liveGames, setLiveGames] = useState<LiveGame[]>([]);
+  const [loadingLiveGames, setLoadingLiveGames] = useState(true);
+
+  React.useEffect(() => {
+    loadLiveGames();
+  }, []);
+
+  const loadLiveGames = async () => {
+    try {
+      const games = await GameStatsService.getLiveGames('rink-1');
+      setLiveGames(games);
+    } catch (error) {
+      console.error('Failed to load live games:', error);
+    } finally {
+      setLoadingLiveGames(false);
+    }
+  };
 
   const sidebarItems = [
     { id: 'home', label: 'Home', icon: Home },
     { id: 'matches', label: 'Matches', icon: Trophy },
+    { id: 'live-games', label: 'Live Games', icon: Play },
     { id: 'schedule', label: 'Schedule', icon: Calendar, route: '/schedule' },
     { id: 'seasons', label: 'Current Seasons', icon: RotateCcw },
     { id: 'leaderboard', label: 'Rink Leaderboard', icon: Trophy },
@@ -378,6 +398,52 @@ export default function RinkDashboard() {
     </View>
   );
 
+  const renderLiveGame = (game: LiveGame) => (
+    <TouchableOpacity 
+      key={game.id} 
+      style={styles.liveGameCard}
+      onPress={() => router.push(`/live-scorekeeper?gameId=${game.id}`)}
+    >
+      <View style={styles.liveGameHeader}>
+        <View style={styles.liveIndicator}>
+          <View style={styles.liveDot} />
+          <Text style={styles.liveText}>LIVE</Text>
+        </View>
+        <Text style={styles.liveGamePeriod}>Period {game.period}</Text>
+      </View>
+      
+      <View style={styles.liveGameTeams}>
+        <View style={styles.liveTeamSection}>
+          <Text style={styles.liveTeamName}>{game.homeTeam.name}</Text>
+          <Text style={styles.liveTeamScore}>{game.homeTeam.score}</Text>
+        </View>
+        <Text style={styles.liveVs}>VS</Text>
+        <View style={styles.liveTeamSection}>
+          <Text style={styles.liveTeamName}>{game.awayTeam.name}</Text>
+          <Text style={styles.liveTeamScore}>{game.awayTeam.score}</Text>
+        </View>
+      </View>
+      
+      <View style={styles.liveGameInfo}>
+        <View style={styles.liveGameTime}>
+          <Clock size={14} color="#64748B" />
+          <Text style={styles.liveTimeText}>{game.timeRemaining}</Text>
+        </View>
+        <Text style={styles.liveVenue}>{game.venue}</Text>
+      </View>
+      
+      <View style={styles.liveGameActions}>
+        <View style={styles.liveGameStats}>
+          <Text style={styles.liveStatText}>Shots: {game.shots.home}-{game.shots.away}</Text>
+          <Text style={styles.liveStatText}>Penalties: {game.penalties.home}-{game.penalties.away}</Text>
+        </View>
+        <TouchableOpacity style={styles.scorekeeperButton}>
+          <Text style={styles.scorekeeperButtonText}>Open Scorekeeper</Text>
+        </TouchableOpacity>
+      </View>
+    </TouchableOpacity>
+  );
+
   return (
     <AuthGuard allowedRoles={['rink_admin', 'rink_owner']}>
       <View style={styles.container}>
@@ -418,7 +484,34 @@ export default function RinkDashboard() {
           </View>
 
           <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+            {/* Live Games Section */}
+            {(activeSection === 'home' || activeSection === 'live-games') && (
+              <View style={styles.section}>
+                <View style={styles.sectionHeader}>
+                  <Text style={styles.sectionTitle}>Live Games</Text>
+                  <TouchableOpacity style={styles.refreshButton} onPress={loadLiveGames}>
+                    <Text style={styles.refreshText}>Refresh</Text>
+                  </TouchableOpacity>
+                </View>
+                
+                {loadingLiveGames ? (
+                  <View style={styles.loadingContainer}>
+                    <Text style={styles.loadingText}>Loading live games...</Text>
+                  </View>
+                ) : liveGames.length > 0 ? (
+                  <View style={styles.liveGamesContainer}>
+                    {liveGames.map(renderLiveGame)}
+                  </View>
+                ) : (
+                  <View style={styles.noLiveGames}>
+                    <Text style={styles.noLiveGamesText}>No live games currently in progress</Text>
+                  </View>
+                )}
+              </View>
+            )}
+
             {/* Overview Stats */}
+            {activeSection === 'home' && (
             <View style={styles.overviewSection}>
               <Text style={styles.sectionTitle}>Rink Overview</Text>
               <View style={styles.rinkStatsGrid}>
@@ -452,8 +545,10 @@ export default function RinkDashboard() {
                 )}
               </View>
             </View>
+            )}
 
             {/* Connected Teams Section */}
+            {(activeSection === 'home' || activeSection === 'matches') && (
             <View style={styles.section}>
               <View style={styles.sectionHeader}>
                 <Text style={styles.sectionTitle}>Connected Teams</Text>
@@ -480,8 +575,10 @@ export default function RinkDashboard() {
                 </View>
               </ScrollView>
             </View>
+            )}
 
             {/* Free Agents Section */}
+            {activeSection === 'home' && (
             <View style={styles.section}>
               <View style={styles.sectionHeader}>
                 <Text style={styles.sectionTitle}>Available Free Agents</Text>
@@ -515,8 +612,10 @@ export default function RinkDashboard() {
                 </View>
               </ScrollView>
             </View>
+            )}
 
             {/* Current Seasons Section */}
+            {(activeSection === 'home' || activeSection === 'seasons') && (
             <View style={styles.section}>
               <View style={styles.sectionHeader}>
                 <Text style={styles.sectionTitle}>Current Seasons</Text>
@@ -530,6 +629,7 @@ export default function RinkDashboard() {
                 {mockSeasons.map(renderSeasonCard)}
               </View>
             </View>
+            )}
           </ScrollView>
         </View>
       </View>
@@ -1145,5 +1245,163 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontFamily: 'Inter-Bold',
     color: '#FFFFFF',
+  },
+  liveGamesContainer: {
+    gap: 16,
+  },
+  liveGameCard: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    padding: 20,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+    borderLeftWidth: 4,
+    borderLeftColor: '#EF4444',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    elevation: 2,
+  },
+  liveGameHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  liveIndicator: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FEF2F2',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 12,
+    gap: 6,
+  },
+  liveDot: {
+    width: 8,
+    height: 8,
+    backgroundColor: '#EF4444',
+    borderRadius: 4,
+  },
+  liveText: {
+    fontSize: 12,
+    fontFamily: 'Inter-Bold',
+    color: '#EF4444',
+  },
+  liveGamePeriod: {
+    fontSize: 14,
+    fontFamily: 'Inter-SemiBold',
+    color: '#64748B',
+  },
+  liveGameTeams: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 16,
+  },
+  liveTeamSection: {
+    flex: 1,
+    alignItems: 'center',
+  },
+  liveTeamName: {
+    fontSize: 16,
+    fontFamily: 'Inter-Bold',
+    color: '#111827',
+    textAlign: 'center',
+    marginBottom: 8,
+  },
+  liveTeamScore: {
+    fontSize: 32,
+    fontFamily: 'Inter-Bold',
+    color: '#6366F1',
+  },
+  liveVs: {
+    fontSize: 14,
+    fontFamily: 'Inter-Bold',
+    color: '#9CA3AF',
+    marginHorizontal: 16,
+  },
+  liveGameInfo: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  liveGameTime: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  liveTimeText: {
+    fontSize: 14,
+    fontFamily: 'Inter-SemiBold',
+    color: '#64748B',
+  },
+  liveVenue: {
+    fontSize: 14,
+    fontFamily: 'Inter-Regular',
+    color: '#6B7280',
+  },
+  liveGameActions: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  liveGameStats: {
+    gap: 4,
+  },
+  liveStatText: {
+    fontSize: 12,
+    fontFamily: 'Inter-Regular',
+    color: '#6B7280',
+  },
+  scorekeeperButton: {
+    backgroundColor: '#EF4444',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 8,
+  },
+  scorekeeperButtonText: {
+    fontSize: 14,
+    fontFamily: 'Inter-Bold',
+    color: '#FFFFFF',
+  },
+  refreshButton: {
+    backgroundColor: '#F3F4F6',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 8,
+  },
+  refreshText: {
+    fontSize: 14,
+    fontFamily: 'Inter-SemiBold',
+    color: '#6B7280',
+  },
+  loadingContainer: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    padding: 40,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+  },
+  loadingText: {
+    fontSize: 16,
+    fontFamily: 'Inter-Regular',
+    color: '#6B7280',
+  },
+  noLiveGames: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    padding: 40,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+  },
+  noLiveGamesText: {
+    fontSize: 16,
+    fontFamily: 'Inter-Regular',
+    color: '#6B7280',
   },
 });

@@ -2,8 +2,9 @@ import React, { useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, Dimensions } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
-import { ArrowLeft, Calendar, Clock, Users, MapPin, Filter, Plus, Search, ChevronDown, AlertTriangle, CheckCircle, Eye } from 'lucide-react-native';
+import { ArrowLeft, Calendar, Clock, Users, MapPin, Filter, Plus, Search, ChevronDown, AlertTriangle, CheckCircle, Eye, Play, Trophy } from 'lucide-react-native';
 import { TimeSlot, RinkSurface, BookingRequest, ScheduleFilter } from '@/types/scheduling';
+import { SchedulingService } from '@/services/schedulingService';
 
 const { width } = Dimensions.get('window');
 const isTablet = width >= 768;
@@ -288,6 +289,29 @@ export default function ScheduleScreen() {
   const [selectedProgramType, setSelectedProgramType] = useState<TimeSlot['programType'] | 'all'>('all');
   const [viewMode, setViewMode] = useState<'day' | 'week' | 'month'>('day');
   const [showFilters, setShowFilters] = useState(false);
+  const [loading, setLoading] = useState(false);
+
+  const refreshSchedule = async () => {
+    setLoading(true);
+    try {
+      // In production, this would refresh from the database
+      await new Promise(resolve => setTimeout(resolve, 1000));
+    } catch (error) {
+      console.error('Failed to refresh schedule:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const startLiveGame = async (slot: TimeSlot) => {
+    try {
+      // Create live game from scheduled slot
+      const liveGame = await SchedulingService.createLiveGame(slot);
+      router.push(`/live-scorekeeper?gameId=${liveGame.id}`);
+    } catch (error) {
+      Alert.alert('Error', 'Failed to start live game tracking');
+    }
+  };
 
   const filteredTimeSlots = timeSlots.filter(slot => {
     const matchesDate = slot.date === selectedDate;
@@ -374,6 +398,30 @@ export default function ScheduleScreen() {
           <Text style={styles.specialRequestsText}>{slot.specialRequests}</Text>
         </View>
       )}
+
+      {/* Live Game Controls */}
+      {slot.programType === 'hockey_league' || slot.programType === 'hockey_practice' ? (
+        <View style={styles.gameControls}>
+          {slot.status === 'scheduled' && (
+            <TouchableOpacity
+              style={styles.startGameButton}
+              onPress={() => startLiveGame(slot)}
+            >
+              <Play size={16} color="#FFFFFF" />
+              <Text style={styles.startGameText}>Start Live Tracking</Text>
+            </TouchableOpacity>
+          )}
+          {slot.status === 'in_progress' && (
+            <TouchableOpacity
+              style={styles.openScorekeeperButton}
+              onPress={() => router.push(`/live-scorekeeper?gameId=${slot.id}`)}
+            >
+              <Trophy size={16} color="#FFFFFF" />
+              <Text style={styles.openScorekeeperText}>Open Scorekeeper</Text>
+            </TouchableOpacity>
+          )}
+        </View>
+      ) : null}
     </TouchableOpacity>
   );
 
@@ -425,6 +473,15 @@ export default function ScheduleScreen() {
         <Text style={styles.headerTitle}>Ice Rink Schedule</Text>
         <TouchableOpacity style={styles.addButton}>
           <Plus size={24} color="#FFFFFF" />
+        </TouchableOpacity>
+        <TouchableOpacity 
+          style={styles.refreshButton}
+          onPress={refreshSchedule}
+          disabled={loading}
+        >
+          <Text style={[styles.refreshButtonText, loading && styles.loadingText]}>
+            {loading ? 'Refreshing...' : 'Refresh'}
+          </Text>
         </TouchableOpacity>
         <TouchableOpacity 
           style={styles.requestButton}
@@ -1064,5 +1121,57 @@ const styles = StyleSheet.create({
     fontFamily: 'Inter-Regular',
     color: '#64748B',
     marginBottom: 2,
+  },
+  gameControls: {
+    marginTop: 16,
+    paddingTop: 16,
+    borderTopWidth: 1,
+    borderTopColor: '#F1F5F9',
+    flexDirection: 'row',
+    gap: 8,
+  },
+  startGameButton: {
+    flex: 1,
+    backgroundColor: '#16A34A',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 10,
+    borderRadius: 8,
+    gap: 6,
+  },
+  startGameText: {
+    fontSize: 14,
+    fontFamily: 'Inter-Bold',
+    color: '#FFFFFF',
+  },
+  openScorekeeperButton: {
+    flex: 1,
+    backgroundColor: '#EF4444',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 10,
+    borderRadius: 8,
+    gap: 6,
+  },
+  openScorekeeperText: {
+    fontSize: 14,
+    fontFamily: 'Inter-Bold',
+    color: '#FFFFFF',
+  },
+  refreshButton: {
+    backgroundColor: '#F1F5F9',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 8,
+  },
+  refreshButtonText: {
+    fontSize: 14,
+    fontFamily: 'Inter-SemiBold',
+    color: '#64748B',
+  },
+  loadingText: {
+    opacity: 0.6,
   },
 });

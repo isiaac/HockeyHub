@@ -1,4 +1,5 @@
 import { TimeSlot, BookingRequest, ScheduleConflict, RinkSurface } from '@/types/scheduling';
+import { LiveGame, GamePlayer } from '@/types/gameStats';
 
 export class SchedulingService {
   static async getTimeSlots(rinkId: string, date: string): Promise<TimeSlot[]> {
@@ -156,6 +157,98 @@ export class SchedulingService {
     return timeSlots
       .filter(slot => slot.date === date)
       .reduce((total, slot) => total + (slot.pricing?.totalCost || 0), 0);
+  }
+
+  static async createLiveGame(timeSlot: TimeSlot): Promise<LiveGame> {
+    try {
+      // In production, this would create a live game record in the database
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
+      // Extract team names from the time slot
+      const teams = timeSlot.title.split(' vs ');
+      const homeTeam = teams[0]?.trim() || timeSlot.title;
+      const awayTeam = teams[1]?.trim() || 'Opponent';
+      
+      // Generate mock players for the game
+      const players = this.generateGamePlayers(homeTeam, awayTeam);
+      
+      const liveGame: LiveGame = {
+        id: `live-${timeSlot.id}`,
+        homeTeam: {
+          id: 'team-home',
+          name: homeTeam,
+          score: 0,
+        },
+        awayTeam: {
+          id: 'team-away',
+          name: awayTeam,
+          score: 0,
+        },
+        period: 1,
+        timeRemaining: '20:00',
+        status: 'in_progress',
+        venue: timeSlot.rinkSurface,
+        startTime: timeSlot.startTime,
+        players: players,
+        events: [],
+        penalties: { home: 0, away: 0 },
+        shots: { home: 0, away: 0 },
+        rinkId: 'rink-1',
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      };
+      
+      // Update the time slot status
+      await this.updateTimeSlot(timeSlot.id, { status: 'in_progress' });
+      
+      return liveGame;
+    } catch (error) {
+      throw new Error('Failed to create live game');
+    }
+  }
+
+  private static generateGamePlayers(homeTeam: string, awayTeam: string): GamePlayer[] {
+    const positions: Array<{ pos: GamePlayer['position'], jersey: number }> = [
+      // Home team
+      { pos: 'C', jersey: 12 }, { pos: 'LW', jersey: 7 }, { pos: 'RW', jersey: 9 },
+      { pos: 'LD', jersey: 4 }, { pos: 'RD', jersey: 2 }, { pos: 'G', jersey: 1 },
+      { pos: 'C', jersey: 11 }, { pos: 'LW', jersey: 15 }, { pos: 'RW', jersey: 23 },
+      { pos: 'LD', jersey: 5 }, { pos: 'RD', jersey: 3 }, { pos: 'G', jersey: 30 },
+      // Away team  
+      { pos: 'C', jersey: 10 }, { pos: 'LW', jersey: 8 }, { pos: 'RW', jersey: 14 },
+      { pos: 'LD', jersey: 6 }, { pos: 'RD', jersey: 22 }, { pos: 'G', jersey: 31 },
+      { pos: 'C', jersey: 13 }, { pos: 'LW', jersey: 16 }, { pos: 'RW', jersey: 19 },
+      { pos: 'LD', jersey: 24 }, { pos: 'RD', jersey: 25 }, { pos: 'G', jersey: 35 },
+    ];
+    
+    const names = [
+      'Alex Chen', 'Morgan Davis', 'Jordan Smith', 'Casey Brown', 'Sam Wilson', 'Taylor Johnson',
+      'Riley Parker', 'Avery Martinez', 'Blake Thompson', 'Cameron Lee', 'Drew Anderson', 'Emery Clark',
+      'Mike Johnson', 'Sarah Lee', 'Tom Anderson', 'Lisa Park', 'Chris Taylor', 'Jamie Wilson',
+      'Pat Martinez', 'Danny Torres', 'Kelly Rogers', 'Quinn Foster', 'Sage Miller', 'River Garcia'
+    ];
+    
+    return positions.map((pos, index) => ({
+      id: `player-${index + 1}`,
+      userId: `user-${index + 1}`,
+      name: names[index] || `Player ${index + 1}`,
+      jerseyNumber: pos.jersey,
+      position: pos.pos,
+      team: index < 12 ? 'home' : 'away',
+      isActive: true,
+      stats: {
+        goals: 0,
+        assists: 0,
+        points: 0,
+        penaltyMinutes: 0,
+        plusMinus: 0,
+        shots: 0,
+        hits: 0,
+        blockedShots: 0,
+        saves: pos.pos === 'G' ? 0 : undefined,
+        shotsAgainst: pos.pos === 'G' ? 0 : undefined,
+      },
+    }));
   }
 
   private static timesOverlap(start1: string, end1: string, start2: string, end2: string): boolean {

@@ -50,7 +50,13 @@ export default function ScorekeeperScreen() {
         timeRemaining: '20:00'
       }));
     } else {
-      Alert.alert('Game Over', 'This game has ended. Final score will be recorded.');
+      Alert.alert(
+        'Game Over', 
+        'This game has ended. Final score will be recorded.',
+        [
+          { text: 'OK', onPress: () => router.replace('/rink-dashboard') }
+        ]
+      );
     }
   };
 
