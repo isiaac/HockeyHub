@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
-import { ArrowLeft, User, Mail, Phone, Edit3, Save, X, Shield, Bell, Lock, LogOut, Settings, Crown, Calendar, MapPin } from 'lucide-react-native';
+import { ArrowLeft, User, Mail, Phone, CreditCard as Edit3, Save, X, Shield, Bell, Lock, LogOut, Settings, Crown, Calendar, MapPin } from 'lucide-react-native';
 import { useAuth } from '@/contexts/AuthContext';
 
 export default function ProfileScreen() {
