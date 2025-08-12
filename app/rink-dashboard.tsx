@@ -314,7 +314,9 @@ export default function RinkDashboard() {
         )}
       </View>
       
-      <Text style={styles.agentName}>{agent.firstName} {agent.lastName}</Text>
+      <TouchableOpacity onPress={() => router.push(`/player-profile?playerId=${agent.userId}`)}>
+        <Text style={styles.agentName}>{agent.firstName} {agent.lastName}</Text>
+      </TouchableOpacity>
       <Text style={styles.agentPosition}>{agent.hockeyInfo.position}</Text>
       
       <View style={styles.agentLocation}>

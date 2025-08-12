@@ -45,9 +45,18 @@ export default function GameDetailsScreen() {
       <Text style={styles.rosterTitle}>{teamName} Roster</Text>
       <View style={styles.rosterList}>
         {roster.map((player, index) => (
-          <View key={index} style={styles.playerItem}>
+          <TouchableOpacity 
+            key={index} 
+            style={styles.playerItem}
+            onPress={() => {
+              // Extract player name from roster string (e.g., "Alex Chen (C)" -> "Alex Chen")
+              const playerName = player.split(' (')[0];
+              // In production, you'd have actual player IDs
+              router.push(`/player-profile?playerId=user-${index + 1}`);
+            }}
+          >
             <Text style={styles.playerName}>{player}</Text>
-          </View>
+          </TouchableOpacity>
         ))}
       </View>
     </View>
