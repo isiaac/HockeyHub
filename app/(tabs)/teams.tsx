@@ -296,7 +296,10 @@ export default function TeamsScreen() {
                     {player.name.split(' ').map(n => n[0]).join('')}
                   </Text>
                 </View>
-                <View style={styles.playerInfo}>
+                <TouchableOpacity 
+                  style={styles.playerInfo}
+                  onPress={() => router.push(`/player-profile?playerId=${player.id}`)}
+                >
                   <Text style={styles.playerName}>{player.name}</Text>
                   <Text style={styles.playerDetails}>
                     {player.position} • Age {player.age} • {player.skillLevel}
@@ -305,7 +308,7 @@ export default function TeamsScreen() {
                     <MapPin size={14} color="#666" />
                     <Text style={styles.locationText}>{player.location} • {player.distance}</Text>
                   </View>
-                </View>
+                </TouchableOpacity>
                 <View style={styles.ratingContainer}>
                   <Star size={16} color="#FFD700" fill="#FFD700" />
                   <Text style={styles.rating}>{player.rating}</Text>

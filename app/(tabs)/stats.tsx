@@ -237,10 +237,13 @@ export default function StatsScreen() {
       <View style={styles.playerRank}>
         <Text style={styles.rankNumber}>{index + 1}</Text>
       </View>
-      <View style={styles.playerInfo}>
+      <TouchableOpacity 
+        style={styles.playerInfo}
+        onPress={() => router.push(`/player-profile?playerId=${player.id}`)}
+      >
         <Text style={styles.playerName}>{player.name}</Text>
         <Text style={styles.playerPosition}>{player.position}</Text>
-      </View>
+      </TouchableOpacity>
       <View style={styles.playerStatsRow}>
         <Text style={styles.playerStat}>{player.goals}G</Text>
         <Text style={styles.playerStat}>{player.assists}A</Text>
@@ -284,10 +287,13 @@ export default function StatsScreen() {
         )}
         <Text style={[styles.rankNumber, player.team === 'Ice Wolves' && styles.currentTeamRank]}>{index + 1}</Text>
       </View>
-      <View style={styles.playerInfo}>
+      <TouchableOpacity 
+        style={styles.playerInfo}
+        onPress={() => router.push(`/player-profile?playerId=${player.id}`)}
+      >
         <Text style={[styles.playerName, player.team === 'Ice Wolves' && styles.currentTeamName]}>{player.name}</Text>
         <Text style={styles.playerTeam}>{player.team} • {player.position}</Text>
-      </View>
+      </TouchableOpacity>
       <View style={styles.playerStatsRow}>
         {scoringCategory === 'points' && (
           <>
