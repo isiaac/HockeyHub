@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Dimensions } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Plus, MapPin, Clock, Calendar, Users, CircleCheck as CheckCircle, Circle as XCircle } from 'lucide-react-native';
+import { Plus, MapPin, Clock, Calendar, Users, CircleCheck as CheckCircle, Circle as XCircle, UserCheck } from 'lucide-react-native';
 import { router } from 'expo-router';
 import { User, Team, Rink } from '@/types/auth';
 import { getFeatureAccess, UserSubscription } from '@/types/subscription';
@@ -522,20 +522,29 @@ export default function GamesScreen() {
       {renderLineup(game)}
 
       {game.status === 'live' && (
-        featureAccess.canUseScorekeeper ? (
+        <View style={styles.gameActions}>
           <TouchableOpacity
-            style={styles.scorekeeperButton}
-            onPress={() => router.push(`/scorekeeper?gameId=${game.id}`)}
+            style={styles.addSubstituteButton}
+            onPress={() => router.push(`/substitute-manager?gameId=${game.id}&teamId=${game.name}`)}
           >
-            <Text style={styles.scorekeeperText}>Open Scorekeeper</Text>
+            <UserCheck size={16} color="#FFFFFF" />
+            <Text style={styles.addSubstituteText}>Add Substitute</Text>
           </TouchableOpacity>
-        ) : (
-          <SubscriptionGate
-            feature="Scorekeeper"
-            requiredPlan="Team Pro"
-            onUpgrade={() => router.push('/subscription')}
-          />
-        )
+          {featureAccess.canUseScorekeeper ? (
+            <TouchableOpacity
+              style={styles.scorekeeperButton}
+              onPress={() => router.push(`/scorekeeper?gameId=${game.id}`)}
+            >
+              <Text style={styles.scorekeeperText}>Open Scorekeeper</Text>
+            </TouchableOpacity>
+          ) : (
+            <SubscriptionGate
+              feature="Scorekeeper"
+              requiredPlan="Team Pro"
+              onUpgrade={() => router.push('/subscription')}
+            />
+          )}
+        </View>
       )}
     </View>
   );
@@ -555,8 +564,8 @@ export default function GamesScreen() {
             style={styles.addButton}
             onPress={() => router.push('/schedule-game')}
           >
-          <Plus size={24} color="#FFFFFF" />
-        </TouchableOpacity>
+            <Plus size={24} color="#FFFFFF" />
+          </TouchableOpacity>
         </View>
       </View>
 
@@ -600,6 +609,18 @@ const styles = StyleSheet.create({
   headerActions: {
     flexDirection: 'row',
     alignItems: 'center',
+  },
+  rinkButton: {
+    backgroundColor: '#F1F5F9',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
+    marginRight: 12,
+  },
+  rinkButtonText: {
+    fontSize: 14,
+    fontFamily: 'Inter-SemiBold',
+    color: '#475569',
   },
   content: {
     flex: 1,
@@ -1018,267 +1039,26 @@ const styles = StyleSheet.create({
     fontFamily: 'Inter-Regular',
     color: '#64748B',
   },
-  lineupSection: {
-    marginTop: 16,
-    borderTopWidth: 1,
-    borderTopColor: '#E2E8F0',
-    paddingTop: 16,
-  },
-  lineupHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 16,
-  },
-  lineupInfo: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  lineupTitle: {
-    fontSize: 16,
-    fontFamily: 'Inter-SemiBold',
-    color: '#1E293B',
-  },
-  checkedInCount: {
-    fontSize: 14,
-    fontFamily: 'Inter-Regular',
-    color: '#64748B',
-  },
-  expandIcon: {
-    fontSize: 20,
-    fontFamily: 'Inter-Bold',
-    color: '#0EA5E9',
-  },
-  lineupList: {
-    gap: 16,
-  },
-  lineSection: {
-    marginBottom: 8,
-  },
-  lineTitle: {
-    fontSize: 14,
-    fontFamily: 'Inter-Bold',
-    color: '#475569',
-    marginBottom: 8,
-    paddingHorizontal: 4,
-  },
-  lineGroup: {
-    backgroundColor: '#F8FAFC',
-    borderRadius: 12,
-    padding: 8,
-    gap: 2,
-  },
-  playerRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingVertical: 12,
-    paddingHorizontal: 12,
-    backgroundColor: '#FFFFFF',
-    borderRadius: 8,
-    borderLeftWidth: 3,
-    borderLeftColor: '#E2E8F0',
-  },
-  checkedInRow: {
-    backgroundColor: '#F0F9FF',
-    borderLeftColor: '#0EA5E9',
-  },
-  disabledRow: {
-    opacity: 0.6,
-  },
-  playerInfo: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    flex: 1,
-  },
-  positionBadge: {
-    backgroundColor: '#475569',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 6,
-    marginRight: 12,
-    minWidth: 32,
-    alignItems: 'center',
-  },
-  positionText: {
-    fontSize: 12,
-    fontFamily: 'Inter-Bold',
-    color: '#FFFFFF',
-  },
-  playerDetails: {
-    flex: 1,
-  },
-  playerName: {
-    fontSize: 15,
-    fontFamily: 'Inter-SemiBold',
-    color: '#1E293B',
-  },
-  checkedInPlayerName: {
-    color: '#0EA5E9',
-  },
-  currentUserName: {
-    fontFamily: 'Inter-Bold',
-  },
-  checkInControls: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  checkInIndicator: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  checkedInIndicator: {
-    backgroundColor: '#0EA5E9',
-  },
-  checkedOutIndicator: {
-    backgroundColor: '#F1F5F9',
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
-  },
-  statusBadgeSmall: {
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 12,
-    minWidth: 36,
-    alignItems: 'center',
-  },
-  checkedInBadge: {
-    backgroundColor: '#0EA5E9',
-  },
-  checkedOutBadge: {
-    backgroundColor: '#F1F5F9',
-  },
-  statusBadgeText: {
-    fontSize: 11,
-    fontFamily: 'Inter-Bold',
-  },
-  checkedInBadgeText: {
-    color: '#FFFFFF',
-  },
-  checkedOutBadgeText: {
-    color: '#64748B',
-  },
   playerNameContainer: {
     flex: 1,
   },
-  playerNameRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  jerseyNumber: {
-    fontSize: 14,
-    fontFamily: 'Inter-Bold',
-    color: '#0EA5E9',
-    minWidth: 24,
-  },
-  preferredPosition: {
-    fontSize: 12,
-    fontFamily: 'Inter-Regular',
-    color: '#F59E0B',
-    marginTop: 2,
-  },
-  editButton: {
-    backgroundColor: '#F1F5F9',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 8,
-    marginRight: 8,
-  },
-  editButtonText: {
-    fontSize: 12,
-    fontFamily: 'Inter-SemiBold',
-    color: '#475569',
-  },
-  editPanel: {
-    backgroundColor: '#F8FAFC',
-    padding: 16,
-    marginTop: 8,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
-  },
-  editTitle: {
-    fontSize: 16,
-    fontFamily: 'Inter-Bold',
-    color: '#1E293B',
-    marginBottom: 16,
-  },
-  editRow: {
-    marginBottom: 12,
-  },
-  editLabel: {
-    fontSize: 14,
-    fontFamily: 'Inter-SemiBold',
-    color: '#374151',
-    marginBottom: 6,
-  },
-  editInput: {
-    backgroundColor: '#FFFFFF',
-    borderWidth: 1,
-    borderColor: '#D1D5DB',
-    borderRadius: 8,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    fontSize: 16,
-    fontFamily: 'Inter-Regular',
-    color: '#1F2937',
-  },
-  editActions: {
-    flexDirection: 'row',
-    gap: 12,
-    marginTop: 16,
-  },
-  cancelButton: {
-    flex: 1,
-    backgroundColor: '#F3F4F6',
-    paddingVertical: 12,
-    borderRadius: 8,
-    alignItems: 'center',
-  },
-  cancelButtonText: {
-    fontSize: 14,
-    fontFamily: 'Inter-SemiBold',
-    color: '#6B7280',
-  },
-  saveButton: {
-    flex: 1,
-    backgroundColor: '#0EA5E9',
-    paddingVertical: 12,
-    borderRadius: 8,
-    alignItems: 'center',
-  },
-  saveButtonText: {
-    fontSize: 14,
-    fontFamily: 'Inter-SemiBold',
-    color: '#FFFFFF',
-  },
   gameActions: {
-    flexDirection: 'row',
-    gap: 8,
     marginTop: 16,
-    paddingTop: 16,
-    borderTopWidth: 1,
-    borderTopColor: '#F1F5F9',
+    gap: 12,
   },
   addSubstituteButton: {
-    flex: 1,
-    backgroundColor: '#8B5CF6',
+    backgroundColor: '#16A34A',
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 10,
-    borderRadius: 8,
-    gap: 6,
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    borderRadius: 12,
+    gap: 8,
   },
   addSubstituteText: {
-    fontSize: 14,
-    fontFamily: 'Inter-Bold',
     color: '#FFFFFF',
+    fontSize: 16,
+    fontFamily: 'Inter-SemiBold',
   },
 });
