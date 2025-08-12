@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, Dimensions } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
-import { ArrowLeft, Calendar, Clock, Users, MapPin, Filter, Plus, Search, ChevronDown, AlertTriangle, CheckCircle, Eye, Play, Trophy } from 'lucide-react-native';
+import { ArrowLeft, Calendar, Clock, Users, MapPin, Filter, Plus, Search, ChevronDown, TriangleAlert as AlertTriangle, CircleCheck as CheckCircle, Eye, Play, Trophy } from 'lucide-react-native';
 import { TimeSlot, RinkSurface, BookingRequest, ScheduleFilter } from '@/types/scheduling';
 import { SchedulingService } from '@/services/schedulingService';
 
