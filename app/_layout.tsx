@@ -44,6 +44,7 @@ export default function RootLayout() {
         <Stack.Screen name="team-import" />
         <Stack.Screen name="booking-request" />
         <Stack.Screen name="schedule-game" />
+        <Stack.Screen name="substitute-manager" />
         <Stack.Screen name="+not-found" />
       </Stack>
       <StatusBar style="auto" />
