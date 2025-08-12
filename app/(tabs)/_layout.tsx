@@ -1,5 +1,5 @@
 import { Tabs } from 'expo-router';
-import { Calendar, MessageSquare, Trophy, Users, Store, ChartBar as BarChart3, User } from 'lucide-react-native';
+import { Calendar, MessageSquare, Trophy, Users, Store, ChartBar as BarChart3, User, Award, ShoppingBag } from 'lucide-react-native';
 import { AuthGuard } from '@/components/AuthGuard';
 
 export default function TabLayout() {
@@ -33,11 +33,38 @@ export default function TabLayout() {
           }}
         />
         <Tabs.Screen
+          name="teams"
+          options={{
+            title: 'Teams',
+            tabBarIcon: ({ size, color }) => (
+              <Users size={size} color={color} />
+            ),
+          }}
+        />
+        <Tabs.Screen
           name="stats"
           options={{
             title: 'Stats',
             tabBarIcon: ({ size, color }) => (
               <BarChart3 size={size} color={color} />
+            ),
+          }}
+        />
+        <Tabs.Screen
+          name="store"
+          options={{
+            title: 'Store',
+            tabBarIcon: ({ size, color }) => (
+              <ShoppingBag size={size} color={color} />
+            ),
+          }}
+        />
+        <Tabs.Screen
+          name="badges"
+          options={{
+            title: 'Badges',
+            tabBarIcon: ({ size, color }) => (
+              <Award size={size} color={color} />
             ),
           }}
         />
