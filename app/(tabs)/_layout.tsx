@@ -33,15 +33,6 @@ export default function TabLayout() {
           }}
         />
         <Tabs.Screen
-          name="teams"
-          options={{
-            title: 'Free Agents',
-            tabBarIcon: ({ size, color }) => (
-              <Users size={size} color={color} />
-            ),
-          }}
-        />
-        <Tabs.Screen
           name="stats"
           options={{
             title: 'Stats',
@@ -51,29 +42,11 @@ export default function TabLayout() {
           }}
         />
         <Tabs.Screen
-          name="badges"
-          options={{
-            title: 'Badges',
-            tabBarIcon: ({ size, color }) => (
-              <Trophy size={size} color={color} />
-            ),
-          }}
-        />
-        <Tabs.Screen
           name="chat"
           options={{
             title: 'Chat',
             tabBarIcon: ({ size, color }) => (
               <MessageSquare size={size} color={color} />
-            ),
-          }}
-        />
-        <Tabs.Screen
-          name="store"
-          options={{
-            title: 'Store',
-            tabBarIcon: ({ size, color }) => (
-              <Store size={size} color={color} />
             ),
           }}
         />

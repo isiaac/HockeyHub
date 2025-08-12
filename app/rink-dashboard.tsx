@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Dimensions, TextInput } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Home, Users, Calendar, Settings, LogOut, Plus, Search, Filter, Bell, ChevronDown, Building, Trophy, UserCheck, RotateCcw, Eye, Star, Shield, MapPin, Mail, Phone, Play, Clock, BarChart3, TrendingUp } from 'lucide-react-native';
+import { Home, Users, Calendar, Settings, LogOut, Plus, Search, Filter, Bell, ChevronDown, Building, Trophy, UserCheck, RotateCcw, Eye, Star, Shield, MapPin, Mail, Phone, Play, Clock, BarChart3, TrendingUp, AlertCircle } from 'lucide-react-native';
 import { router } from 'expo-router';
 import { AuthGuard } from '@/components/AuthGuard';
 import { useAuth } from '@/contexts/AuthContext';
@@ -227,22 +227,33 @@ const rinkStats: RinkStats = {
 export default function RinkDashboard() {
   const { logout } = useAuth();
   const [activeSection, setActiveSection] = useState('home');
-  const [searchQuery, setSearchQuery] = useState('');
   const [liveGames, setLiveGames] = useState<LiveGame[]>([]);
   const [loadingLiveGames, setLoadingLiveGames] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   React.useEffect(() => {
     loadLiveGames();
   }, []);
 
   const loadLiveGames = async () => {
+    setError(null);
     try {
       const games = await GameStatsService.getLiveGames('rink-1');
       setLiveGames(games);
     } catch (error) {
       console.error('Failed to load live games:', error);
+      setError('Failed to load live games. Please try again.');
     } finally {
       setLoadingLiveGames(false);
+    }
+  };
+
+  const handleLogout = async () => {
+    try {
+      await logout();
+      router.replace('/(auth)/login');
+    } catch (error) {
+      console.error('Logout failed:', error);
     }
   };
 
@@ -251,19 +262,8 @@ export default function RinkDashboard() {
     { id: 'teams', label: 'Teams', icon: Users },
     { id: 'live-games', label: 'Live Games', icon: Play },
     { id: 'schedule', label: 'Schedule', icon: Calendar, route: '/schedule' },
-    { id: 'seasons', label: 'Seasons', icon: RotateCcw },
-    { id: 'analytics', label: 'Analytics', icon: BarChart3 },
-    { id: 'free-agents', label: 'Free Agents', icon: UserCheck },
     { id: 'settings', label: 'Settings', icon: Settings },
   ];
-
-  const filteredFreeAgents = mockFreeAgents.filter(agent => {
-    const matchesSearch = searchQuery === '' || 
-      `${agent.firstName} ${agent.lastName}`.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      agent.hockeyInfo.position.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      agent.location.city.toLowerCase().includes(searchQuery.toLowerCase());
-    return matchesSearch && agent.isActive;
-  });
 
   const renderSidebarItem = (item: any) => (
     <TouchableOpacity
@@ -463,7 +463,7 @@ export default function RinkDashboard() {
             
             <TouchableOpacity
               style={[styles.sidebarItem, styles.logoutItem]}
-              onPress={logout}
+              onPress={handleLogout}
             >
               <LogOut size={18} color="#EF4444" />
               <Text style={[styles.sidebarText, styles.logoutText]}>Logout</Text>
@@ -541,6 +541,13 @@ export default function RinkDashboard() {
                     </TouchableOpacity>
                   </View>
                   
+                  {error && (
+                    <View style={styles.errorContainer}>
+                      <AlertCircle size={20} color="#EF4444" />
+                      <Text style={styles.errorText}>{error}</Text>
+                    </View>
+                  )}
+                  
                   {loadingLiveGames ? (
                     <View style={styles.loadingContainer}>
                       <Text style={styles.loadingText}>Loading live games...</Text>
@@ -580,20 +587,20 @@ export default function RinkDashboard() {
                     
                     <TouchableOpacity 
                       style={styles.quickActionCard}
-                      onPress={() => setActiveSection('free-agents')}
+                      onPress={() => router.push('/broadcast')}
                     >
-                      <UserCheck size={32} color="#F59E0B" />
-                      <Text style={styles.quickActionTitle}>Free Agents</Text>
-                      <Text style={styles.quickActionSubtitle}>Available players</Text>
+                      <Bell size={32} color="#F59E0B" />
+                      <Text style={styles.quickActionTitle}>Broadcast</Text>
+                      <Text style={styles.quickActionSubtitle}>Send messages</Text>
                     </TouchableOpacity>
                     
                     <TouchableOpacity 
                       style={styles.quickActionCard}
-                      onPress={() => setActiveSection('analytics')}
+                      onPress={() => router.push('/booking-request')}
                     >
-                      <BarChart3 size={32} color="#8B5CF6" />
-                      <Text style={styles.quickActionTitle}>Analytics</Text>
-                      <Text style={styles.quickActionSubtitle}>View reports</Text>
+                      <Plus size={32} color="#8B5CF6" />
+                      <Text style={styles.quickActionTitle}>Book Ice Time</Text>
+                      <Text style={styles.quickActionSubtitle}>New booking</Text>
                     </TouchableOpacity>
                   </View>
                 </View>
@@ -627,108 +634,53 @@ export default function RinkDashboard() {
 
             {/* Connected Teams Section */}
             {activeSection === 'teams' && (
-            <View style={styles.section}>
-              <View style={styles.sectionHeader}>
-                <Text style={styles.sectionTitle}>Connected Teams</Text>
-                <View style={styles.sectionActions}>
-                  <TouchableOpacity style={styles.addTeamButton}>
-                    <Plus size={16} color="#FFFFFF" />
-                    <Text style={styles.addTeamText}>Add Team</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity 
-                    style={styles.scheduleButton}
-                    onPress={() => router.push('/schedule')}
-                  >
-                    <Calendar size={16} color="#FFFFFF" />
-                    <Text style={styles.scheduleButtonText}>View Schedule</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity style={styles.viewAllButton}>
-                    <Text style={styles.viewAllText}>View All</Text>
-                  </TouchableOpacity>
-                </View>
-              </View>
-              <View style={styles.teamsGrid}>
-                {mockConnectedTeams.map(renderTeamCard)}
-              </View>
-            </View>
-            )}
-
-            {/* Free Agents Section */}
-            {activeSection === 'free-agents' && (
-            <View style={styles.section}>
-              <View style={styles.sectionHeader}>
-                <Text style={styles.sectionTitle}>Available Free Agents</Text>
-                <View style={styles.sectionActions}>
-                  <TouchableOpacity style={styles.filterButton}>
-                    <Filter size={16} color="#6B7280" />
-                    <Text style={styles.filterText}>Filter</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity style={styles.viewAllButton}>
-                    <Text style={styles.viewAllText}>View All</Text>
-                  </TouchableOpacity>
-                </View>
-              </View>
-              
-              <View style={styles.searchContainer}>
-                <View style={styles.searchBar}>
-                  <Search size={16} color="#6B7280" />
-                  <TextInput
-                    style={styles.searchInput}
-                    placeholder="Search by name, position, or location..."
-                    value={searchQuery}
-                    onChangeText={setSearchQuery}
-                    placeholderTextColor="#9CA3AF"
-                  />
-                </View>
-              </View>
-              
-              <View style={styles.agentsGrid}>
-                {filteredFreeAgents.map(renderFreeAgent)}
-              </View>
-            </View>
-            )}
-
-            {/* Current Seasons Section */}
-            {activeSection === 'seasons' && (
-            <View style={styles.section}>
-              <View style={styles.sectionHeader}>
-                <Text style={styles.sectionTitle}>Current Seasons</Text>
-                <View style={styles.seasonActions}>
-                  <TouchableOpacity style={styles.createButton}>
-                    <Text style={styles.createButtonText}>Create Seasons</Text>
-                  </TouchableOpacity>
-                </View>
-              </View>
-              <View style={styles.seasonsGrid}>
-                {mockSeasons.map(renderSeasonCard)}
-              </View>
-            </View>
-            )}
-
-            {/* Analytics Section */}
-            {activeSection === 'analytics' && (
               <View style={styles.section}>
-                <Text style={styles.sectionTitle}>Analytics & Reports</Text>
-                <View style={styles.analyticsGrid}>
-                  <View style={styles.analyticsCard}>
-                    <Text style={styles.analyticsTitle}>Revenue Trends</Text>
-                    <Text style={styles.analyticsValue}>$45,600</Text>
-                    <Text style={styles.analyticsSubtitle}>+12% from last month</Text>
+                <View style={styles.sectionHeader}>
+                  <Text style={styles.sectionTitle}>Connected Teams</Text>
+                  <View style={styles.sectionActions}>
+                    <TouchableOpacity style={styles.addTeamButton}>
+                      <Plus size={16} color="#FFFFFF" />
+                      <Text style={styles.addTeamText}>Add Team</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity 
+                      style={styles.scheduleButton}
+                      onPress={() => router.push('/schedule')}
+                    >
+                      <Calendar size={16} color="#FFFFFF" />
+                      <Text style={styles.scheduleButtonText}>View Schedule</Text>
+                    </TouchableOpacity>
                   </View>
-                  <View style={styles.analyticsCard}>
-                    <Text style={styles.analyticsTitle}>Ice Utilization</Text>
-                    <Text style={styles.analyticsValue}>87%</Text>
-                    <Text style={styles.analyticsSubtitle}>Peak hours: 6-10 PM</Text>
+                </View>
+                <View style={styles.teamsGrid}>
+                  {mockConnectedTeams.map(renderTeamCard)}
+                </View>
+              </View>
+            )}
+
+            {/* Settings Section */}
+            {activeSection === 'settings' && (
+              <View style={styles.section}>
+                <Text style={styles.sectionTitle}>Rink Settings</Text>
+                <View style={styles.settingsGrid}>
+                  <View style={styles.settingsCard}>
+                    <Building size={32} color="#6366F1" />
+                    <Text style={styles.settingsTitle}>Facility Management</Text>
+                    <Text style={styles.settingsSubtitle}>Manage rink surfaces and equipment</Text>
                   </View>
-                  <View style={styles.analyticsCard}>
-                    <Text style={styles.analyticsTitle}>Team Growth</Text>
-                    <Text style={styles.analyticsValue}>+5</Text>
-                    <Text style={styles.analyticsSubtitle}>New teams this quarter</Text>
+                  <View style={styles.settingsCard}>
+                    <Users size={32} color="#10B981" />
+                    <Text style={styles.settingsTitle}>Team Permissions</Text>
+                    <Text style={styles.settingsSubtitle}>Control team access and features</Text>
                   </View>
-                  <View style={styles.analyticsCard}>
-                    <Text style={styles.analyticsTitle}>Player Retention</Text>
-                    <Text style={styles.analyticsValue}>94%</Text>
-                    <Text style={styles.analyticsSubtitle}>Season-over-season</Text>
+                  <View style={styles.settingsCard}>
+                    <Bell size={32} color="#F59E0B" />
+                    <Text style={styles.settingsTitle}>Notifications</Text>
+                    <Text style={styles.settingsSubtitle}>Configure alerts and messages</Text>
+                  </View>
+                  <View style={styles.settingsCard}>
+                    <BarChart3 size={32} color="#8B5CF6" />
+                    <Text style={styles.settingsTitle}>Reports & Analytics</Text>
+                    <Text style={styles.settingsSubtitle}>View usage and revenue reports</Text>
                   </View>
                 </View>
               </View>
@@ -747,7 +699,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#F8FAFC',
   },
   sidebar: {
-    width: isDesktop ? 280 : 240,
+    width: 240,
     backgroundColor: '#1F2937',
     paddingVertical: 32,
     paddingHorizontal: 20,
@@ -884,7 +836,7 @@ const styles = StyleSheet.create({
   },
   content: {
     flex: 1,
-    paddingHorizontal: isDesktop ? 40 : 24,
+    paddingHorizontal: 32,
     paddingTop: 32,
   },
   overviewSection: {
@@ -893,12 +845,11 @@ const styles = StyleSheet.create({
   rinkStatsGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: isDesktop ? 24 : 16,
+    gap: 20,
   },
   rinkStatCard: {
-    flex: isDesktop ? 0 : 1,
-    width: isDesktop ? (width - 320 - 80 - 72) / 4 : '48%',
-    minWidth: isDesktop ? 240 : 180,
+    flex: 1,
+    minWidth: 200,
     backgroundColor: '#FFFFFF',
     borderRadius: 20,
     padding: 24,
@@ -924,7 +875,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   rinkStatValue: {
-    fontSize: isDesktop ? 32 : 24,
+    fontSize: 28,
     fontFamily: 'Inter-Bold',
     color: '#111827',
   },
@@ -1021,15 +972,17 @@ const styles = StyleSheet.create({
   teamsGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: isDesktop ? 24 : 16,
+    gap: 20,
   },
-  agentsGrid: {
+  settingsGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: isDesktop ? 24 : 16,
+    gap: 20,
   },
   teamCard: {
-    width: isDesktop ? 280 : 240,
+    flex: 1,
+    minWidth: 240,
+    maxWidth: 300,
     backgroundColor: '#FFFFFF',
     borderRadius: 20,
     padding: 24,
@@ -1134,11 +1087,14 @@ const styles = StyleSheet.create({
     fontFamily: 'Inter-Bold',
     color: '#6366F1',
   },
-  agentCard: {
-    width: isDesktop ? 220 : 180,
+  settingsCard: {
+    flex: 1,
+    minWidth: 200,
+    maxWidth: 250,
     backgroundColor: '#FFFFFF',
     borderRadius: 20,
     padding: 20,
+    alignItems: 'center',
     borderWidth: 1,
     borderColor: '#E5E7EB',
     shadowColor: '#000',
@@ -1147,147 +1103,33 @@ const styles = StyleSheet.create({
     shadowRadius: 12,
     elevation: 4,
   },
-  agentHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
-    marginBottom: 20,
-  },
-  agentAvatar: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: '#6366F1',
-    alignItems: 'center',
-    justifyContent: 'center',
-    position: 'relative',
-  },
-  avatarText: {
-    fontSize: 18,
-    fontFamily: 'Inter-Bold',
-    color: '#FFFFFF',
-  },
-  availableDot: {
-    position: 'absolute',
-    top: 2,
-    right: 2,
-    width: 14,
-    height: 14,
-    backgroundColor: '#10B981',
-    borderRadius: 7,
-    borderWidth: 2,
-    borderColor: '#FFFFFF',
-  },
-  verifiedBadge: {
-    backgroundColor: '#ECFDF5',
-    padding: 8,
-    borderRadius: 10,
-  },
-  agentName: {
+  settingsTitle: {
     fontSize: 18,
     fontFamily: 'Inter-Bold',
     color: '#111827',
-    marginBottom: 6,
+    marginTop: 16,
+    marginBottom: 8,
+    textAlign: 'center',
   },
-  agentPosition: {
-    fontSize: 14,
-    fontFamily: 'Inter-SemiBold',
-    color: '#6366F1',
-    marginBottom: 16,
-  },
-  agentLocation: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    marginBottom: 16,
-  },
-  locationText: {
+  settingsSubtitle: {
     fontSize: 14,
     fontFamily: 'Inter-Regular',
     color: '#6B7280',
+    textAlign: 'center',
   },
-  agentMeta: {
+  errorContainer: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
+    backgroundColor: '#FEF2F2',
+    padding: 16,
+    borderRadius: 12,
     marginBottom: 20,
-  },
-  ageText: {
-    fontSize: 14,
-    fontFamily: 'Inter-SemiBold',
-    color: '#6B7280',
-  },
-  skillText: {
-    fontSize: 12,
-    fontFamily: 'Inter-SemiBold',
-    color: '#8B5CF6',
-    textTransform: 'uppercase',
-  },
-  ratingContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#FEF3C7',
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: 8,
-    gap: 6,
-  },
-  rating: {
-    fontSize: 12,
-    fontFamily: 'Inter-Bold',
-    color: '#D97706',
-  },
-  agentActions: {
-    flexDirection: 'row',
     gap: 12,
   },
-  contactButton: {
-    flex: 1,
-    backgroundColor: '#6366F1',
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 10,
-    borderRadius: 10,
-    gap: 8,
-  },
-  contactText: {
-    fontSize: 12,
-    fontFamily: 'Inter-Bold',
-    color: '#FFFFFF',
-  },
-  recruitButton: {
-    flex: 1,
-    backgroundColor: '#EEF2FF',
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 10,
-    borderRadius: 10,
-    borderWidth: 1,
-    borderColor: '#6366F1',
-    gap: 8,
-  },
-  recruitText: {
-    fontSize: 12,
-    fontFamily: 'Inter-Bold',
-    color: '#6366F1',
-  },
-  seasonActions: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 16,
-  },
-  createButton: {
-    backgroundColor: '#6366F1',
-    paddingHorizontal: 24,
-    paddingVertical: 12,
-    borderRadius: 12,
-  },
-  createButtonText: {
-    fontSize: 16,
-    fontFamily: 'Inter-Bold',
-    color: '#FFFFFF',
+  errorText: {
+    fontSize: 14,
+    fontFamily: 'Inter-SemiBold',
+    color: '#EF4444',
   },
   scheduleButton: {
     backgroundColor: '#10B981',
@@ -1303,70 +1145,14 @@ const styles = StyleSheet.create({
     fontFamily: 'Inter-Bold',
     color: '#FFFFFF',
   },
-  seasonsGrid: {
+  liveGamesGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: isDesktop ? 32 : 20,
-  },
-  seasonCard: {
-    width: isDesktop ? 240 : 200,
-    height: 180,
-    borderRadius: 20,
-    padding: 24,
-    justifyContent: 'space-between',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.12,
-    shadowRadius: 16,
-    elevation: 6,
-  },
-  seasonHeader: {
-    marginBottom: 16,
-  },
-  seasonName: {
-    fontSize: 22,
-    fontFamily: 'Inter-Bold',
-    color: '#FFFFFF',
-    marginBottom: 8,
-  },
-  seasonDivision: {
-    fontSize: 14,
-    fontFamily: 'Inter-SemiBold',
-    color: 'rgba(255, 255, 255, 0.9)',
-  },
-  seasonDate: {
-    fontSize: 14,
-    fontFamily: 'Inter-Regular',
-    color: 'rgba(255, 255, 255, 0.8)',
-    marginBottom: 20,
-  },
-  seasonStats: {
-    gap: 8,
-    marginBottom: 20,
-  },
-  seasonStat: {
-    fontSize: 14,
-    fontFamily: 'Inter-SemiBold',
-    color: 'rgba(255, 255, 255, 0.9)',
-  },
-  seasonManageButton: {
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
-    paddingVertical: 12,
-    borderRadius: 12,
-    alignItems: 'center',
-  },
-  seasonManageText: {
-    fontSize: 14,
-    fontFamily: 'Inter-Bold',
-    color: '#FFFFFF',
-  },
-  liveGamesGrid: {
-    flexDirection: isDesktop ? 'row' : 'column',
-    flexWrap: 'wrap',
-    gap: isDesktop ? 24 : 16,
+    gap: 20,
   },
   liveGameCard: {
-    width: isDesktop ? (width - 320 - 80 - 48) / 2 : '100%',
+    flex: 1,
+    minWidth: 350,
     backgroundColor: '#FFFFFF',
     borderRadius: 20,
     padding: 24,
@@ -1527,10 +1313,11 @@ const styles = StyleSheet.create({
   quickActionsGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: isDesktop ? 24 : 16,
+    gap: 20,
   },
   quickActionCard: {
-    width: isDesktop ? (width - 320 - 80 - 72) / 4 : '48%',
+    flex: 1,
+    minWidth: 200,
     backgroundColor: '#FFFFFF',
     borderRadius: 20,
     padding: 24,
@@ -1557,17 +1344,11 @@ const styles = StyleSheet.create({
     color: '#6B7280',
     textAlign: 'center',
   },
-  analyticsGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: isDesktop ? 24 : 16,
-  },
-  analyticsCard: {
-    width: isDesktop ? (width - 320 - 80 - 72) / 4 : '48%',
+  agentCard: {
+    width: isDesktop ? 220 : 180,
     backgroundColor: '#FFFFFF',
     borderRadius: 20,
-    padding: 24,
-    alignItems: 'center',
+    padding: 20,
     borderWidth: 1,
     borderColor: '#E5E7EB',
     shadowColor: '#000',
@@ -1576,23 +1357,203 @@ const styles = StyleSheet.create({
     shadowRadius: 12,
     elevation: 4,
   },
-  analyticsTitle: {
-    fontSize: 16,
-    fontFamily: 'Inter-SemiBold',
-    color: '#6B7280',
-    marginBottom: 12,
-    textAlign: 'center',
+  agentHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    marginBottom: 20,
   },
-  analyticsValue: {
-    fontSize: 32,
+  agentAvatar: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: '#6366F1',
+    alignItems: 'center',
+    justifyContent: 'center',
+    position: 'relative',
+  },
+  avatarText: {
+    fontSize: 18,
+    fontFamily: 'Inter-Bold',
+    color: '#FFFFFF',
+  },
+  availableDot: {
+    position: 'absolute',
+    top: 2,
+    right: 2,
+    width: 14,
+    height: 14,
+    backgroundColor: '#10B981',
+    borderRadius: 7,
+    borderWidth: 2,
+    borderColor: '#FFFFFF',
+  },
+  verifiedBadge: {
+    backgroundColor: '#ECFDF5',
+    padding: 8,
+    borderRadius: 10,
+  },
+  agentName: {
+    fontSize: 18,
     fontFamily: 'Inter-Bold',
     color: '#111827',
-    marginBottom: 8,
+    marginBottom: 6,
   },
-  analyticsSubtitle: {
+  agentPosition: {
+    fontSize: 14,
+    fontFamily: 'Inter-SemiBold',
+    color: '#6366F1',
+    marginBottom: 16,
+  },
+  agentLocation: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 16,
+  },
+  locationText: {
     fontSize: 14,
     fontFamily: 'Inter-Regular',
-    color: '#16A34A',
-    textAlign: 'center',
+    color: '#6B7280',
+  },
+  agentMeta: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  ageText: {
+    fontSize: 14,
+    fontFamily: 'Inter-SemiBold',
+    color: '#6B7280',
+  },
+  skillText: {
+    fontSize: 12,
+    fontFamily: 'Inter-SemiBold',
+    color: '#8B5CF6',
+    textTransform: 'uppercase',
+  },
+  ratingContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FEF3C7',
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 8,
+    gap: 6,
+  },
+  rating: {
+    fontSize: 12,
+    fontFamily: 'Inter-Bold',
+    color: '#D97706',
+  },
+  agentActions: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  contactButton: {
+    flex: 1,
+    backgroundColor: '#6366F1',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 10,
+    borderRadius: 10,
+    gap: 8,
+  },
+  contactText: {
+    fontSize: 12,
+    fontFamily: 'Inter-Bold',
+    color: '#FFFFFF',
+  },
+  recruitButton: {
+    flex: 1,
+    backgroundColor: '#EEF2FF',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 10,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: '#6366F1',
+    gap: 8,
+  },
+  recruitText: {
+    fontSize: 12,
+    fontFamily: 'Inter-Bold',
+    color: '#6366F1',
+  },
+  seasonActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 16,
+  },
+  createButton: {
+    backgroundColor: '#6366F1',
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 12,
+  },
+  createButtonText: {
+    fontSize: 16,
+    fontFamily: 'Inter-Bold',
+    color: '#FFFFFF',
+  },
+  seasonsGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: isDesktop ? 32 : 20,
+  },
+  seasonCard: {
+    width: isDesktop ? 240 : 200,
+    height: 180,
+    borderRadius: 20,
+    padding: 24,
+    justifyContent: 'space-between',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.12,
+    shadowRadius: 16,
+    elevation: 6,
+  },
+  seasonHeader: {
+    marginBottom: 16,
+  },
+  seasonName: {
+    fontSize: 22,
+    fontFamily: 'Inter-Bold',
+    color: '#FFFFFF',
+    marginBottom: 8,
+  },
+  seasonDivision: {
+    fontSize: 14,
+    fontFamily: 'Inter-SemiBold',
+    color: 'rgba(255, 255, 255, 0.9)',
+  },
+  seasonDate: {
+    fontSize: 14,
+    fontFamily: 'Inter-Regular',
+    color: 'rgba(255, 255, 255, 0.8)',
+    marginBottom: 20,
+  },
+  seasonStats: {
+    gap: 8,
+    marginBottom: 20,
+  },
+  seasonStat: {
+    fontSize: 14,
+    fontFamily: 'Inter-SemiBold',
+    color: 'rgba(255, 255, 255, 0.9)',
+  },
+  seasonManageButton: {
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    paddingVertical: 12,
+    borderRadius: 12,
+    alignItems: 'center',
+  },
+  seasonManageText: {
+    fontSize: 14,
+    fontFamily: 'Inter-Bold',
+    color: '#FFFFFF',
   },
 });

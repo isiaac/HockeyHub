@@ -57,6 +57,16 @@ export default function LiveScorekeeperScreen() {
 
       const updatedGame = await GameStatsService.updatePlayerStat(game.id, update);
       setGame(updatedGame);
+      
+      // Show feedback for the update
+      const player = game.players.find(p => p.id === playerId);
+      if (player && value > 0) {
+        const statName = statType === 'goal' ? 'Goal' : 
+                        statType === 'assist' ? 'Assist' : 
+                        statType === 'penalty' ? 'Penalty' : 
+                        statType.charAt(0).toUpperCase() + statType.slice(1);
+        console.log(`${statName} added for ${player.name}`);
+      }
     } catch (error) {
       Alert.alert('Error', 'Failed to update player stat');
     }
