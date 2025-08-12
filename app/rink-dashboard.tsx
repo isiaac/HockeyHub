@@ -260,6 +260,7 @@ export default function RinkDashboard() {
   const sidebarItems = [
     { id: 'home', label: 'Home', icon: Home },
     { id: 'teams', label: 'Teams', icon: Users },
+    { id: 'substitutes', label: 'Substitutes', icon: UserCheck },
     { id: 'live-games', label: 'Live Games', icon: Play },
     { id: 'schedule', label: 'Schedule', icon: Calendar, route: '/schedule' },
     { id: 'settings', label: 'Settings', icon: Settings },
@@ -602,6 +603,15 @@ export default function RinkDashboard() {
                       <Text style={styles.quickActionTitle}>Book Ice Time</Text>
                       <Text style={styles.quickActionSubtitle}>New booking</Text>
                     </TouchableOpacity>
+                    
+                    <TouchableOpacity 
+                      style={styles.quickActionCard}
+                      onPress={() => setActiveSection('substitutes')}
+                    >
+                      <UserCheck size={32} color="#EF4444" />
+                      <Text style={styles.quickActionTitle}>Manage Substitutes</Text>
+                      <Text style={styles.quickActionSubtitle}>Player database</Text>
+                    </TouchableOpacity>
                   </View>
                 </View>
               </>
@@ -653,6 +663,79 @@ export default function RinkDashboard() {
                 </View>
                 <View style={styles.teamsGrid}>
                   {mockConnectedTeams.map(renderTeamCard)}
+                </View>
+              </View>
+            )}
+
+            {/* Substitutes Section */}
+            {activeSection === 'substitutes' && (
+              <View style={styles.section}>
+                <View style={styles.sectionHeader}>
+                  <Text style={styles.sectionTitle}>Substitute Players Database</Text>
+                  <TouchableOpacity 
+                    style={styles.addSubstituteButton}
+                    onPress={() => router.push('/substitute-manager')}
+                  >
+                    <UserCheck size={16} color="#FFFFFF" />
+                    <Text style={styles.addSubstituteText}>Search & Add</Text>
+                  </TouchableOpacity>
+                </View>
+                
+                <View style={styles.substituteStats}>
+                  <View style={styles.substituteStatCard}>
+                    <Text style={styles.substituteStatValue}>47</Text>
+                    <Text style={styles.substituteStatLabel}>Registered Substitutes</Text>
+                  </View>
+                  <View style={styles.substituteStatCard}>
+                    <Text style={styles.substituteStatValue}>23</Text>
+                    <Text style={styles.substituteStatLabel}>Available Today</Text>
+                  </View>
+                  <View style={styles.substituteStatCard}>
+                    <Text style={styles.substituteStatValue}>42</Text>
+                    <Text style={styles.substituteStatLabel}>USA Hockey Verified</Text>
+                  </View>
+                  <View style={styles.substituteStatCard}>
+                    <Text style={styles.substituteStatValue}>8</Text>
+                    <Text style={styles.substituteStatLabel}>Used This Week</Text>
+                  </View>
+                </View>
+
+                <View style={styles.recentSubstitutes}>
+                  <Text style={styles.recentSubstitutesTitle}>Recent Substitute Activity</Text>
+                  <View style={styles.recentSubstitutesList}>
+                    <View style={styles.recentSubstituteItem}>
+                      <View style={styles.recentSubstituteInfo}>
+                        <Text style={styles.recentSubstituteName}>Jamie Wilson</Text>
+                        <Text style={styles.recentSubstituteDetails}>Added to Ice Wolves vs Thunder Hawks</Text>
+                        <Text style={styles.recentSubstituteTime}>2 hours ago</Text>
+                      </View>
+                      <View style={styles.recentSubstituteStatus}>
+                        <Text style={styles.approvedStatus}>APPROVED</Text>
+                      </View>
+                    </View>
+                    
+                    <View style={styles.recentSubstituteItem}>
+                      <View style={styles.recentSubstituteInfo}>
+                        <Text style={styles.recentSubstituteName}>Taylor Martinez</Text>
+                        <Text style={styles.recentSubstituteDetails}>Added to Storm Riders practice</Text>
+                        <Text style={styles.recentSubstituteTime}>5 hours ago</Text>
+                      </View>
+                      <View style={styles.recentSubstituteStatus}>
+                        <Text style={styles.pendingStatus}>PENDING</Text>
+                      </View>
+                    </View>
+                    
+                    <View style={styles.recentSubstituteItem}>
+                      <View style={styles.recentSubstituteInfo}>
+                        <Text style={styles.recentSubstituteName}>Casey Thompson</Text>
+                        <Text style={styles.recentSubstituteDetails}>Rejected - USA Hockey expired</Text>
+                        <Text style={styles.recentSubstituteTime}>1 day ago</Text>
+                      </View>
+                      <View style={styles.recentSubstituteStatus}>
+                        <Text style={styles.rejectedStatus}>REJECTED</Text>
+                      </View>
+                    </View>
+                  </View>
                 </View>
               </View>
             )}
@@ -1343,6 +1426,128 @@ const styles = StyleSheet.create({
     fontFamily: 'Inter-Regular',
     color: '#6B7280',
     textAlign: 'center',
+  },
+  addSubstituteButton: {
+    backgroundColor: '#EF4444',
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    borderRadius: 12,
+    gap: 10,
+  },
+  addSubstituteText: {
+    fontSize: 16,
+    fontFamily: 'Inter-Bold',
+    color: '#FFFFFF',
+  },
+  substituteStats: {
+    flexDirection: 'row',
+    gap: 20,
+    marginBottom: 32,
+  },
+  substituteStatCard: {
+    flex: 1,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    padding: 20,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    elevation: 2,
+  },
+  substituteStatValue: {
+    fontSize: 24,
+    fontFamily: 'Inter-Bold',
+    color: '#111827',
+  },
+  substituteStatLabel: {
+    fontSize: 12,
+    fontFamily: 'Inter-SemiBold',
+    color: '#6B7280',
+    textAlign: 'center',
+    marginTop: 4,
+  },
+  recentSubstitutes: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    padding: 20,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+  },
+  recentSubstitutesTitle: {
+    fontSize: 18,
+    fontFamily: 'Inter-Bold',
+    color: '#111827',
+    marginBottom: 16,
+  },
+  recentSubstitutesList: {
+    gap: 16,
+  },
+  recentSubstituteItem: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    backgroundColor: '#F9FAFB',
+    borderRadius: 12,
+  },
+  recentSubstituteInfo: {
+    flex: 1,
+  },
+  recentSubstituteName: {
+    fontSize: 16,
+    fontFamily: 'Inter-SemiBold',
+    color: '#111827',
+    marginBottom: 4,
+  },
+  recentSubstituteDetails: {
+    fontSize: 14,
+    fontFamily: 'Inter-Regular',
+    color: '#6B7280',
+    marginBottom: 2,
+  },
+  recentSubstituteTime: {
+    fontSize: 12,
+    fontFamily: 'Inter-Regular',
+    color: '#9CA3AF',
+  },
+  recentSubstituteStatus: {
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 8,
+  },
+  approvedStatus: {
+    fontSize: 10,
+    fontFamily: 'Inter-Bold',
+    color: '#10B981',
+    backgroundColor: '#ECFDF5',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 8,
+  },
+  pendingStatus: {
+    fontSize: 10,
+    fontFamily: 'Inter-Bold',
+    color: '#F59E0B',
+    backgroundColor: '#FFFBEB',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 8,
+  },
+  rejectedStatus: {
+    fontSize: 10,
+    fontFamily: 'Inter-Bold',
+    color: '#EF4444',
+    backgroundColor: '#FEF2F2',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 8,
   },
   agentCard: {
     width: isDesktop ? 220 : 180,
