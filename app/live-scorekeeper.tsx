@@ -15,6 +15,8 @@ export default function LiveScorekeeperScreen() {
   const [searchQuery, setSearchQuery] = useState('');
   const [gameTimer, setGameTimer] = useState<NodeJS.Timeout | null>(null);
   const [isTimerRunning, setIsTimerRunning] = useState(false);
+  const [showShotModal, setShowShotModal] = useState(false);
+  const [selectedTeamForShot, setSelectedTeamForShot] = useState<'home' | 'away' | null>(null);
 
   useEffect(() => {
     loadGame();
@@ -154,6 +156,29 @@ export default function LiveScorekeeperScreen() {
     }
   };
 
+  const updateTeamShots = (team: 'home' | 'away', change: number) => {
+    if (!game) return;
+    
+    setGame(prev => prev ? {
+      ...prev,
+      shots: {
+        ...prev.shots,
+        [team]: Math.max(0, prev.shots[team] + change)
+      },
+      updatedAt: new Date().toISOString(),
+    } : null);
+  };
+
+  const openShotModal = (team: 'home' | 'away') => {
+    setSelectedTeamForShot(team);
+    setShowShotModal(true);
+  };
+
+  const closeShotModal = () => {
+    setSelectedTeamForShot(null);
+    setShowShotModal(false);
+  };
+
   const openPlayerModal = (player: GamePlayer) => {
     setSelectedPlayer(player);
     setShowPlayerModal(true);
@@ -241,8 +266,23 @@ export default function LiveScorekeeperScreen() {
 
             <View style={styles.statSection}>
               <Text style={styles.statSectionTitle}>Penalties</Text>
-              {renderPlayerStatButton('Minor Penalty (2 min)', 'penalty', Math.floor(selectedPlayer.stats.penaltyMinutes / 2), 2)}
-              {renderPlayerStatButton('Major Penalty (5 min)', 'penalty', Math.floor(selectedPlayer.stats.penaltyMinutes / 5), 5)}
+              <View style={styles.penaltyButtons}>
+                <TouchableOpacity
+                  style={styles.penaltyButton}
+                  onPress={() => updatePlayerStat(selectedPlayer.id, 'penalty', 1, 2)}
+                >
+                  <Text style={styles.penaltyButtonText}>+2 Min Penalty</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={styles.penaltyButton}
+                  onPress={() => updatePlayerStat(selectedPlayer.id, 'penalty', 1, 5)}
+                >
+                  <Text style={styles.penaltyButtonText}>+5 Min Major</Text>
+                </TouchableOpacity>
+              </View>
+              <Text style={styles.penaltyTotal}>
+                Total PIM: {selectedPlayer.stats.penaltyMinutes} minutes
+              </Text>
             </View>
 
             <View style={styles.statSection}>
@@ -338,7 +378,13 @@ export default function LiveScorekeeperScreen() {
           <Text style={styles.teamName}>{game.homeTeam.name}</Text>
           <Text style={styles.teamLabel}>HOME</Text>
           <Text style={styles.teamScore}>{game.homeTeam.score}</Text>
-          <Text style={styles.teamShots}>{game.shots.home} shots</Text>
+          <TouchableOpacity 
+            style={styles.shotsContainer}
+            onPress={() => openShotModal('home')}
+          >
+            <Text style={styles.teamShots}>{game.shots.home} shots</Text>
+            <Text style={styles.shotsLabel}>Tap to edit</Text>
+          </TouchableOpacity>
         </View>
 
         <View style={styles.divider}>
@@ -353,7 +399,13 @@ export default function LiveScorekeeperScreen() {
           <Text style={styles.teamName}>{game.awayTeam.name}</Text>
           <Text style={styles.teamLabel}>AWAY</Text>
           <Text style={styles.teamScore}>{game.awayTeam.score}</Text>
-          <Text style={styles.teamShots}>{game.shots.away} shots</Text>
+          <TouchableOpacity 
+            style={styles.shotsContainer}
+            onPress={() => openShotModal('away')}
+          >
+            <Text style={styles.teamShots}>{game.shots.away} shots</Text>
+            <Text style={styles.shotsLabel}>Tap to edit</Text>
+          </TouchableOpacity>
         </View>
       </View>
 
@@ -402,8 +454,76 @@ export default function LiveScorekeeperScreen() {
       </View>
 
       {showPlayerModal && renderPlayerModal()}
+      {showShotModal && renderShotModal()}
     </SafeAreaView>
   );
+
+  const renderShotModal = () => {
+    if (!selectedTeamForShot || !game) return null;
+
+    const teamName = selectedTeamForShot === 'home' ? game.homeTeam.name : game.awayTeam.name;
+    const currentShots = game.shots[selectedTeamForShot];
+
+    return (
+      <View style={styles.modalOverlay}>
+        <View style={styles.shotModal}>
+          <View style={styles.shotModalHeader}>
+            <Text style={styles.shotModalTitle}>Edit Shots - {teamName}</Text>
+            <TouchableOpacity onPress={closeShotModal}>
+              <Text style={styles.closeButton}>✕</Text>
+            </TouchableOpacity>
+          </View>
+
+          <View style={styles.shotModalContent}>
+            <Text style={styles.currentShotsText}>Current Shots: {currentShots}</Text>
+            
+            <View style={styles.shotControls}>
+              <TouchableOpacity
+                style={styles.shotControlButton}
+                onPress={() => {
+                  updateTeamShots(selectedTeamForShot, -1);
+                }}
+              >
+                <Minus size={24} color="#FFFFFF" />
+                <Text style={styles.shotControlText}>Remove Shot</Text>
+              </TouchableOpacity>
+              
+              <TouchableOpacity
+                style={styles.shotControlButton}
+                onPress={() => {
+                  updateTeamShots(selectedTeamForShot, 1);
+                }}
+              >
+                <Plus size={24} color="#FFFFFF" />
+                <Text style={styles.shotControlText}>Add Shot</Text>
+              </TouchableOpacity>
+            </View>
+
+            <View style={styles.quickShotButtons}>
+              <TouchableOpacity
+                style={styles.quickShotButton}
+                onPress={() => {
+                  updateTeamShots(selectedTeamForShot, 5);
+                  closeShotModal();
+                }}
+              >
+                <Text style={styles.quickShotText}>+5 Shots</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.quickShotButton}
+                onPress={() => {
+                  updateTeamShots(selectedTeamForShot, 10);
+                  closeShotModal();
+                }}
+              >
+                <Text style={styles.quickShotText}>+10 Shots</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </View>
+    );
+  };
 }
 
 const styles = StyleSheet.create({
@@ -781,6 +901,118 @@ const styles = StyleSheet.create({
   },
   currentStatLabel: {
     fontSize: 12,
+    fontFamily: 'Inter-SemiBold',
+    color: '#64748B',
+  },
+  penaltyButtons: {
+    flexDirection: 'row',
+    gap: 12,
+    marginBottom: 12,
+  },
+  penaltyButton: {
+    flex: 1,
+    backgroundColor: '#EF4444',
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  penaltyButtonText: {
+    fontSize: 14,
+    fontFamily: 'Inter-Bold',
+    color: '#FFFFFF',
+  },
+  penaltyTotal: {
+    fontSize: 14,
+    fontFamily: 'Inter-SemiBold',
+    color: '#374151',
+    textAlign: 'center',
+    backgroundColor: '#F8FAFC',
+    padding: 8,
+    borderRadius: 8,
+  },
+  shotsContainer: {
+    alignItems: 'center',
+    backgroundColor: '#334155',
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: 8,
+    marginTop: 8,
+  },
+  shotsLabel: {
+    fontSize: 10,
+    fontFamily: 'Inter-Regular',
+    color: '#94A3B8',
+    marginTop: 2,
+  },
+  shotModal: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    width: '80%',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.25,
+    shadowRadius: 12,
+    elevation: 8,
+  },
+  shotModalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#E2E8F0',
+  },
+  shotModalTitle: {
+    fontSize: 18,
+    fontFamily: 'Inter-Bold',
+    color: '#1E293B',
+  },
+  shotModalContent: {
+    paddingHorizontal: 20,
+    paddingVertical: 24,
+    alignItems: 'center',
+  },
+  currentShotsText: {
+    fontSize: 24,
+    fontFamily: 'Inter-Bold',
+    color: '#1E293B',
+    marginBottom: 24,
+  },
+  shotControls: {
+    flexDirection: 'row',
+    gap: 16,
+    marginBottom: 24,
+  },
+  shotControlButton: {
+    backgroundColor: '#0EA5E9',
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    borderRadius: 12,
+    gap: 8,
+  },
+  shotControlText: {
+    fontSize: 16,
+    fontFamily: 'Inter-Bold',
+    color: '#FFFFFF',
+  },
+  quickShotButtons: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  quickShotButton: {
+    backgroundColor: '#F1F5F9',
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+  },
+  quickShotText: {
+    fontSize: 14,
     fontFamily: 'Inter-SemiBold',
     color: '#64748B',
   },
