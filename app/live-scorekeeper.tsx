@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert, TextInput } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router, useLocalSearchParams } from 'expo-router';
-import { ArrowLeft, Plus, Minus, Clock, Users, Target, AlertTriangle, Save, Play, Pause, Square } from 'lucide-react-native';
+import { ArrowLeft, Plus, Minus, Clock, Users, Target, TriangleAlert as AlertTriangle, Save, Play, Pause, Square } from 'lucide-react-native';
 import { LiveGame, GamePlayer, StatUpdate } from '@/types/gameStats';
 import { GameStatsService } from '@/services/gamestatsService';
 
