@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Dimensions, TextInput } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Chrome as Home, Users, Calendar, Settings, LogOut, Plus, Search, Filter, Bell, ChevronDown, Building, Trophy, UserCheck, RotateCcw, Eye, Star, Shield, MapPin, Mail, Phone, Play, Clock } from 'lucide-react-native';
+import { Home, Users, Calendar, Settings, LogOut, Plus, Search, Filter, Bell, ChevronDown, Building, Trophy, UserCheck, RotateCcw, Eye, Star, Shield, MapPin, Mail, Phone, Play, Clock, BarChart3, TrendingUp } from 'lucide-react-native';
 import { router } from 'expo-router';
 import { AuthGuard } from '@/components/AuthGuard';
 import { useAuth } from '@/contexts/AuthContext';
@@ -10,6 +10,8 @@ import { LiveGame } from '@/types/gameStats';
 import { GameStatsService } from '@/services/gamestatsService';
 
 const { width } = Dimensions.get('window');
+const isDesktop = width >= 1024;
+const isTablet = width >= 768;
 
 interface ConnectedTeam {
   id: string;
@@ -246,15 +248,13 @@ export default function RinkDashboard() {
 
   const sidebarItems = [
     { id: 'home', label: 'Home', icon: Home },
-    { id: 'matches', label: 'Matches', icon: Trophy },
+    { id: 'teams', label: 'Teams', icon: Users },
     { id: 'live-games', label: 'Live Games', icon: Play },
     { id: 'schedule', label: 'Schedule', icon: Calendar, route: '/schedule' },
-    { id: 'seasons', label: 'Current Seasons', icon: RotateCcw },
-    { id: 'leaderboard', label: 'Rink Leaderboard', icon: Trophy },
-    { id: 'management', label: 'User Management', icon: UserCheck },
-    { id: 'calendar', label: 'Calendar', icon: Calendar },
+    { id: 'seasons', label: 'Seasons', icon: RotateCcw },
+    { id: 'analytics', label: 'Analytics', icon: BarChart3 },
+    { id: 'free-agents', label: 'Free Agents', icon: UserCheck },
     { id: 'settings', label: 'Settings', icon: Settings },
-    { id: 'logout', label: 'Logout', icon: LogOut, action: logout },
   ];
 
   const filteredFreeAgents = mockFreeAgents.filter(agent => {
@@ -446,7 +446,7 @@ export default function RinkDashboard() {
 
   return (
     <AuthGuard allowedRoles={['rink_admin', 'rink_owner']}>
-      <View style={styles.container}>
+      <SafeAreaView style={styles.container}>
         {/* Dark Sidebar */}
         <View style={styles.sidebar}>
           <View style={styles.logo}>
@@ -458,6 +458,16 @@ export default function RinkDashboard() {
           
           <View style={styles.sidebarMenu}>
             {sidebarItems.map(renderSidebarItem)}
+            
+            <View style={styles.sidebarDivider} />
+            
+            <TouchableOpacity
+              style={[styles.sidebarItem, styles.logoutItem]}
+              onPress={logout}
+            >
+              <LogOut size={18} color="#EF4444" />
+              <Text style={[styles.sidebarText, styles.logoutText]}>Logout</Text>
+            </TouchableOpacity>
           </View>
         </View>
 
@@ -485,7 +495,112 @@ export default function RinkDashboard() {
 
           <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
             {/* Live Games Section */}
-            {(activeSection === 'home' || activeSection === 'live-games') && (
+            {activeSection === 'home' && (
+              <>
+                {/* Overview Stats */}
+                <View style={styles.overviewSection}>
+                  <Text style={styles.sectionTitle}>Rink Overview</Text>
+                  <View style={styles.rinkStatsGrid}>
+                    {renderRinkStatsCard(
+                      'Total Teams',
+                      rinkStats.totalTeams.toString(),
+                      'Active teams managed',
+                      <Users size={24} color="#FFFFFF" />,
+                      '#6366F1'
+                    )}
+                    {renderRinkStatsCard(
+                      'Total Players',
+                      rinkStats.totalPlayers.toString(),
+                      'Registered players',
+                      <Trophy size={24} color="#FFFFFF" />,
+                      '#10B981'
+                    )}
+                    {renderRinkStatsCard(
+                      'Monthly Revenue',
+                      `$${rinkStats.monthlyRevenue.toLocaleString()}`,
+                      'This month',
+                      <TrendingUp size={24} color="#FFFFFF" />,
+                      '#F59E0B'
+                    )}
+                    {renderRinkStatsCard(
+                      'Utilization',
+                      `${rinkStats.utilizationRate}%`,
+                      'Ice time booked',
+                      <BarChart3 size={24} color="#FFFFFF" />,
+                      '#8B5CF6'
+                    )}
+                  </View>
+                </View>
+
+                {/* Live Games */}
+                <View style={styles.section}>
+                  <View style={styles.sectionHeader}>
+                    <Text style={styles.sectionTitle}>Live Games</Text>
+                    <TouchableOpacity style={styles.refreshButton} onPress={loadLiveGames}>
+                      <Text style={styles.refreshText}>Refresh</Text>
+                    </TouchableOpacity>
+                  </View>
+                  
+                  {loadingLiveGames ? (
+                    <View style={styles.loadingContainer}>
+                      <Text style={styles.loadingText}>Loading live games...</Text>
+                    </View>
+                  ) : liveGames.length > 0 ? (
+                    <View style={styles.liveGamesGrid}>
+                      {liveGames.map(renderLiveGame)}
+                    </View>
+                  ) : (
+                    <View style={styles.noLiveGames}>
+                      <Text style={styles.noLiveGamesText}>No live games currently in progress</Text>
+                    </View>
+                  )}
+                </View>
+
+                {/* Quick Actions */}
+                <View style={styles.quickActionsSection}>
+                  <Text style={styles.sectionTitle}>Quick Actions</Text>
+                  <View style={styles.quickActionsGrid}>
+                    <TouchableOpacity 
+                      style={styles.quickActionCard}
+                      onPress={() => router.push('/schedule')}
+                    >
+                      <Calendar size={32} color="#0EA5E9" />
+                      <Text style={styles.quickActionTitle}>View Schedule</Text>
+                      <Text style={styles.quickActionSubtitle}>Manage ice time</Text>
+                    </TouchableOpacity>
+                    
+                    <TouchableOpacity 
+                      style={styles.quickActionCard}
+                      onPress={() => setActiveSection('teams')}
+                    >
+                      <Users size={32} color="#16A34A" />
+                      <Text style={styles.quickActionTitle}>Manage Teams</Text>
+                      <Text style={styles.quickActionSubtitle}>View all teams</Text>
+                    </TouchableOpacity>
+                    
+                    <TouchableOpacity 
+                      style={styles.quickActionCard}
+                      onPress={() => setActiveSection('free-agents')}
+                    >
+                      <UserCheck size={32} color="#F59E0B" />
+                      <Text style={styles.quickActionTitle}>Free Agents</Text>
+                      <Text style={styles.quickActionSubtitle}>Available players</Text>
+                    </TouchableOpacity>
+                    
+                    <TouchableOpacity 
+                      style={styles.quickActionCard}
+                      onPress={() => setActiveSection('analytics')}
+                    >
+                      <BarChart3 size={32} color="#8B5CF6" />
+                      <Text style={styles.quickActionTitle}>Analytics</Text>
+                      <Text style={styles.quickActionSubtitle}>View reports</Text>
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              </>
+            )}
+
+            {activeSection === 'live-games' && (
               <View style={styles.section}>
                 <View style={styles.sectionHeader}>
                   <Text style={styles.sectionTitle}>Live Games</Text>
@@ -499,7 +614,7 @@ export default function RinkDashboard() {
                     <Text style={styles.loadingText}>Loading live games...</Text>
                   </View>
                 ) : liveGames.length > 0 ? (
-                  <View style={styles.liveGamesContainer}>
+                  <View style={styles.liveGamesGrid}>
                     {liveGames.map(renderLiveGame)}
                   </View>
                 ) : (
@@ -510,45 +625,8 @@ export default function RinkDashboard() {
               </View>
             )}
 
-            {/* Overview Stats */}
-            {activeSection === 'home' && (
-            <View style={styles.overviewSection}>
-              <Text style={styles.sectionTitle}>Rink Overview</Text>
-              <View style={styles.rinkStatsGrid}>
-                {renderRinkStatsCard(
-                  'Total Teams',
-                  rinkStats.totalTeams.toString(),
-                  'Active teams managed',
-                  <Users size={20} color="#FFFFFF" />,
-                  '#6366F1'
-                )}
-                {renderRinkStatsCard(
-                  'Total Players',
-                  rinkStats.totalPlayers.toString(),
-                  'Registered players',
-                  <Trophy size={20} color="#FFFFFF" />,
-                  '#10B981'
-                )}
-                {renderRinkStatsCard(
-                  'Games Played',
-                  rinkStats.totalGames.toString(),
-                  'This season',
-                  <Calendar size={20} color="#FFFFFF" />,
-                  '#F59E0B'
-                )}
-                {renderRinkStatsCard(
-                  'Free Agents',
-                  rinkStats.activeFreeAgents.toString(),
-                  'Available players',
-                  <UserCheck size={20} color="#FFFFFF" />,
-                  '#8B5CF6'
-                )}
-              </View>
-            </View>
-            )}
-
             {/* Connected Teams Section */}
-            {(activeSection === 'home' || activeSection === 'matches') && (
+            {activeSection === 'teams' && (
             <View style={styles.section}>
               <View style={styles.sectionHeader}>
                 <Text style={styles.sectionTitle}>Connected Teams</Text>
@@ -569,16 +647,14 @@ export default function RinkDashboard() {
                   </TouchableOpacity>
                 </View>
               </View>
-              <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.horizontalScroll}>
-                <View style={styles.teamsContainer}>
-                  {mockConnectedTeams.map(renderTeamCard)}
-                </View>
-              </ScrollView>
+              <View style={styles.teamsGrid}>
+                {mockConnectedTeams.map(renderTeamCard)}
+              </View>
             </View>
             )}
 
             {/* Free Agents Section */}
-            {activeSection === 'home' && (
+            {activeSection === 'free-agents' && (
             <View style={styles.section}>
               <View style={styles.sectionHeader}>
                 <Text style={styles.sectionTitle}>Available Free Agents</Text>
@@ -606,16 +682,14 @@ export default function RinkDashboard() {
                 </View>
               </View>
               
-              <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.horizontalScroll}>
-                <View style={styles.agentsContainer}>
-                  {filteredFreeAgents.slice(0, 8).map(renderFreeAgent)}
-                </View>
-              </ScrollView>
+              <View style={styles.agentsGrid}>
+                {filteredFreeAgents.map(renderFreeAgent)}
+              </View>
             </View>
             )}
 
             {/* Current Seasons Section */}
-            {(activeSection === 'home' || activeSection === 'seasons') && (
+            {activeSection === 'seasons' && (
             <View style={styles.section}>
               <View style={styles.sectionHeader}>
                 <Text style={styles.sectionTitle}>Current Seasons</Text>
@@ -630,9 +704,38 @@ export default function RinkDashboard() {
               </View>
             </View>
             )}
+
+            {/* Analytics Section */}
+            {activeSection === 'analytics' && (
+              <View style={styles.section}>
+                <Text style={styles.sectionTitle}>Analytics & Reports</Text>
+                <View style={styles.analyticsGrid}>
+                  <View style={styles.analyticsCard}>
+                    <Text style={styles.analyticsTitle}>Revenue Trends</Text>
+                    <Text style={styles.analyticsValue}>$45,600</Text>
+                    <Text style={styles.analyticsSubtitle}>+12% from last month</Text>
+                  </View>
+                  <View style={styles.analyticsCard}>
+                    <Text style={styles.analyticsTitle}>Ice Utilization</Text>
+                    <Text style={styles.analyticsValue}>87%</Text>
+                    <Text style={styles.analyticsSubtitle}>Peak hours: 6-10 PM</Text>
+                  </View>
+                  <View style={styles.analyticsCard}>
+                    <Text style={styles.analyticsTitle}>Team Growth</Text>
+                    <Text style={styles.analyticsValue}>+5</Text>
+                    <Text style={styles.analyticsSubtitle}>New teams this quarter</Text>
+                  </View>
+                  <View style={styles.analyticsCard}>
+                    <Text style={styles.analyticsTitle}>Player Retention</Text>
+                    <Text style={styles.analyticsValue}>94%</Text>
+                    <Text style={styles.analyticsSubtitle}>Season-over-season</Text>
+                  </View>
+                </View>
+              </View>
+            )}
           </ScrollView>
         </View>
-      </View>
+      </SafeAreaView>
     </AuthGuard>
   );
 }
@@ -644,54 +747,66 @@ const styles = StyleSheet.create({
     backgroundColor: '#F8FAFC',
   },
   sidebar: {
-    width: 240,
+    width: isDesktop ? 280 : 240,
     backgroundColor: '#1F2937',
-    paddingVertical: 24,
-    paddingHorizontal: 16,
+    paddingVertical: 32,
+    paddingHorizontal: 20,
   },
   logo: {
     alignItems: 'center',
-    marginBottom: 40,
+    marginBottom: 48,
     paddingHorizontal: 16,
   },
   logoIcon: {
-    width: 48,
-    height: 48,
+    width: 56,
+    height: 56,
     backgroundColor: '#6366F1',
-    borderRadius: 12,
+    borderRadius: 16,
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 12,
+    marginBottom: 16,
   },
   logoText: {
-    fontSize: 24,
+    fontSize: 28,
   },
   logoTitle: {
-    fontSize: 18,
+    fontSize: 20,
     fontFamily: 'Inter-Bold',
     color: '#FFFFFF',
   },
   sidebarMenu: {
-    gap: 4,
+    gap: 8,
   },
   sidebarItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 14,
-    borderRadius: 12,
-    gap: 12,
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    borderRadius: 16,
+    gap: 16,
   },
   activeSidebarItem: {
     backgroundColor: '#6366F1',
   },
+  sidebarDivider: {
+    height: 1,
+    backgroundColor: '#374151',
+    marginVertical: 16,
+    marginHorizontal: 16,
+  },
+  logoutItem: {
+    marginTop: 8,
+  },
   sidebarText: {
-    fontSize: 15,
+    fontSize: 16,
     fontFamily: 'Inter-SemiBold',
     color: '#9CA3AF',
   },
   activeSidebarText: {
     color: '#FFFFFF',
+  },
+  logoutText: {
+    color: '#EF4444',
   },
   mainContent: {
     flex: 1,
@@ -699,14 +814,14 @@ const styles = StyleSheet.create({
   },
   topHeader: {
     backgroundColor: '#6366F1',
-    paddingHorizontal: 24,
-    paddingVertical: 24,
+    paddingHorizontal: isDesktop ? 40 : 24,
+    paddingVertical: 32,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
   },
   welcomeText: {
-    fontSize: 24,
+    fontSize: isDesktop ? 32 : 24,
     fontFamily: 'Inter-Bold',
     color: '#FFFFFF',
   },
@@ -769,184 +884,187 @@ const styles = StyleSheet.create({
   },
   content: {
     flex: 1,
-    paddingHorizontal: 24,
-    paddingTop: 24,
+    paddingHorizontal: isDesktop ? 40 : 24,
+    paddingTop: 32,
   },
   overviewSection: {
-    marginBottom: 40,
+    marginBottom: 48,
   },
   rinkStatsGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 16,
+    gap: isDesktop ? 24 : 16,
   },
   rinkStatCard: {
-    flex: 1,
-    minWidth: 200,
+    flex: isDesktop ? 0 : 1,
+    width: isDesktop ? (width - 320 - 80 - 72) / 4 : '48%',
+    minWidth: isDesktop ? 240 : 180,
     backgroundColor: '#FFFFFF',
-    borderRadius: 16,
-    padding: 20,
+    borderRadius: 20,
+    padding: 24,
     flexDirection: 'row',
     alignItems: 'center',
     borderWidth: 1,
     borderColor: '#E5E7EB',
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 8,
-    elevation: 2,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.08,
+    shadowRadius: 12,
+    elevation: 4,
   },
   rinkStatIcon: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
+    width: 56,
+    height: 56,
+    borderRadius: 28,
     alignItems: 'center',
     justifyContent: 'center',
-    marginRight: 16,
+    marginRight: 20,
   },
   rinkStatContent: {
     flex: 1,
   },
   rinkStatValue: {
-    fontSize: 24,
+    fontSize: isDesktop ? 32 : 24,
     fontFamily: 'Inter-Bold',
     color: '#111827',
   },
   rinkStatTitle: {
-    fontSize: 14,
+    fontSize: 16,
     fontFamily: 'Inter-SemiBold',
     color: '#6B7280',
-    marginTop: 4,
+    marginTop: 6,
   },
   rinkStatSubtitle: {
-    fontSize: 12,
+    fontSize: 14,
     fontFamily: 'Inter-Regular',
     color: '#9CA3AF',
-    marginTop: 2,
+    marginTop: 4,
   },
   section: {
-    marginBottom: 40,
+    marginBottom: 48,
   },
   sectionHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 24,
+    marginBottom: 32,
   },
   sectionTitle: {
-    fontSize: 20,
+    fontSize: 24,
     fontFamily: 'Inter-Bold',
     color: '#111827',
   },
   sectionActions: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 12,
+    gap: 16,
   },
   addTeamButton: {
     backgroundColor: '#10B981',
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    borderRadius: 10,
-    gap: 8,
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    borderRadius: 12,
+    gap: 10,
   },
   addTeamText: {
-    fontSize: 14,
+    fontSize: 16,
     fontFamily: 'Inter-Bold',
     color: '#FFFFFF',
   },
   filterButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 10,
+    paddingHorizontal: 20,
+    paddingVertical: 12,
     borderWidth: 1,
     borderColor: '#E5E7EB',
-    borderRadius: 10,
+    borderRadius: 12,
     backgroundColor: '#FFFFFF',
-    gap: 8,
+    gap: 10,
   },
   filterText: {
-    fontSize: 14,
+    fontSize: 16,
     fontFamily: 'Inter-SemiBold',
     color: '#6B7280',
   },
   viewAllButton: {
-    paddingHorizontal: 16,
-    paddingVertical: 10,
+    paddingHorizontal: 20,
+    paddingVertical: 12,
   },
   viewAllText: {
-    fontSize: 14,
+    fontSize: 16,
     fontFamily: 'Inter-SemiBold',
     color: '#6366F1',
   },
   searchContainer: {
-    marginBottom: 24,
+    marginBottom: 32,
   },
   searchBar: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#FFFFFF',
-    borderRadius: 12,
-    paddingHorizontal: 16,
-    paddingVertical: 14,
+    borderRadius: 16,
+    paddingHorizontal: 20,
+    paddingVertical: 16,
     borderWidth: 1,
     borderColor: '#E5E7EB',
-    gap: 12,
+    gap: 16,
   },
   searchInput: {
     flex: 1,
-    fontSize: 15,
+    fontSize: 16,
     fontFamily: 'Inter-Regular',
     color: '#111827',
   },
-  horizontalScroll: {
-    marginHorizontal: -16,
-  },
-  teamsContainer: {
+  teamsGrid: {
     flexDirection: 'row',
-    paddingHorizontal: 16,
-    gap: 20,
+    flexWrap: 'wrap',
+    gap: isDesktop ? 24 : 16,
+  },
+  agentsGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: isDesktop ? 24 : 16,
   },
   teamCard: {
-    width: 200,
+    width: isDesktop ? 280 : 240,
     backgroundColor: '#FFFFFF',
-    borderRadius: 16,
-    padding: 20,
+    borderRadius: 20,
+    padding: 24,
     borderWidth: 1,
     borderColor: '#E5E7EB',
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 8,
-    elevation: 2,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.08,
+    shadowRadius: 12,
+    elevation: 4,
   },
   teamHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'flex-start',
-    marginBottom: 20,
+    marginBottom: 24,
   },
   teamFlag: {
-    width: 52,
-    height: 52,
-    borderRadius: 26,
+    width: 60,
+    height: 60,
+    borderRadius: 30,
     backgroundColor: '#F3F4F6',
     alignItems: 'center',
     justifyContent: 'center',
   },
   flagEmoji: {
-    fontSize: 28,
+    fontSize: 32,
   },
   teamStatus: {
     alignItems: 'center',
   },
   statusDot: {
-    width: 12,
-    height: 12,
-    borderRadius: 6,
+    width: 16,
+    height: 16,
+    borderRadius: 8,
   },
   activeDot: {
     backgroundColor: '#10B981',
@@ -955,34 +1073,34 @@ const styles = StyleSheet.create({
     backgroundColor: '#EF4444',
   },
   teamTitle: {
-    fontSize: 18,
+    fontSize: 20,
     fontFamily: 'Inter-Bold',
     color: '#111827',
-    marginBottom: 6,
+    marginBottom: 8,
   },
   teamDivision: {
-    fontSize: 13,
+    fontSize: 14,
     fontFamily: 'Inter-SemiBold',
     color: '#8B5CF6',
-    marginBottom: 16,
+    marginBottom: 20,
   },
   teamStats: {
-    marginBottom: 20,
-    gap: 6,
+    marginBottom: 24,
+    gap: 8,
   },
   teamRecord: {
-    fontSize: 15,
+    fontSize: 16,
     fontFamily: 'Inter-SemiBold',
     color: '#6366F1',
   },
   teamPlayers: {
-    fontSize: 13,
+    fontSize: 14,
     fontFamily: 'Inter-Regular',
     color: '#6B7280',
   },
   teamActions: {
     flexDirection: 'row',
-    gap: 10,
+    gap: 12,
   },
   viewButton: {
     flex: 1,
@@ -990,12 +1108,12 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 10,
-    borderRadius: 8,
-    gap: 6,
+    paddingVertical: 12,
+    borderRadius: 12,
+    gap: 8,
   },
   viewButtonText: {
-    fontSize: 13,
+    fontSize: 14,
     fontFamily: 'Inter-Bold',
     color: '#FFFFFF',
   },
@@ -1005,52 +1123,47 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 10,
-    borderRadius: 8,
+    paddingVertical: 12,
+    borderRadius: 12,
     borderWidth: 1,
     borderColor: '#6366F1',
-    gap: 6,
+    gap: 8,
   },
   manageButtonText: {
-    fontSize: 13,
+    fontSize: 14,
     fontFamily: 'Inter-Bold',
     color: '#6366F1',
   },
-  agentsContainer: {
-    flexDirection: 'row',
-    paddingHorizontal: 16,
-    gap: 16,
-  },
   agentCard: {
-    width: 160,
+    width: isDesktop ? 220 : 180,
     backgroundColor: '#FFFFFF',
-    borderRadius: 16,
-    padding: 16,
+    borderRadius: 20,
+    padding: 20,
     borderWidth: 1,
     borderColor: '#E5E7EB',
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 8,
-    elevation: 2,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.08,
+    shadowRadius: 12,
+    elevation: 4,
   },
   agentHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'flex-start',
-    marginBottom: 16,
+    marginBottom: 20,
   },
   agentAvatar: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
+    width: 48,
+    height: 48,
+    borderRadius: 24,
     backgroundColor: '#6366F1',
     alignItems: 'center',
     justifyContent: 'center',
     position: 'relative',
   },
   avatarText: {
-    fontSize: 16,
+    fontSize: 18,
     fontFamily: 'Inter-Bold',
     color: '#FFFFFF',
   },
@@ -1058,38 +1171,38 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: 2,
     right: 2,
-    width: 12,
-    height: 12,
+    width: 14,
+    height: 14,
     backgroundColor: '#10B981',
-    borderRadius: 6,
+    borderRadius: 7,
     borderWidth: 2,
     borderColor: '#FFFFFF',
   },
   verifiedBadge: {
     backgroundColor: '#ECFDF5',
-    padding: 6,
-    borderRadius: 8,
+    padding: 8,
+    borderRadius: 10,
   },
   agentName: {
-    fontSize: 16,
+    fontSize: 18,
     fontFamily: 'Inter-Bold',
     color: '#111827',
-    marginBottom: 4,
+    marginBottom: 6,
   },
   agentPosition: {
-    fontSize: 13,
+    fontSize: 14,
     fontFamily: 'Inter-SemiBold',
     color: '#6366F1',
-    marginBottom: 12,
+    marginBottom: 16,
   },
   agentLocation: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
-    marginBottom: 12,
+    gap: 8,
+    marginBottom: 16,
   },
   locationText: {
-    fontSize: 12,
+    fontSize: 14,
     fontFamily: 'Inter-Regular',
     color: '#6B7280',
   },
@@ -1097,15 +1210,15 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 16,
+    marginBottom: 20,
   },
   ageText: {
-    fontSize: 12,
+    fontSize: 14,
     fontFamily: 'Inter-SemiBold',
     color: '#6B7280',
   },
   skillText: {
-    fontSize: 11,
+    fontSize: 12,
     fontFamily: 'Inter-SemiBold',
     color: '#8B5CF6',
     textTransform: 'uppercase',
@@ -1114,19 +1227,19 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#FEF3C7',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 6,
-    gap: 4,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 8,
+    gap: 6,
   },
   rating: {
-    fontSize: 11,
+    fontSize: 12,
     fontFamily: 'Inter-Bold',
     color: '#D97706',
   },
   agentActions: {
     flexDirection: 'row',
-    gap: 8,
+    gap: 12,
   },
   contactButton: {
     flex: 1,
@@ -1134,12 +1247,12 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 8,
-    borderRadius: 8,
-    gap: 6,
+    paddingVertical: 10,
+    borderRadius: 10,
+    gap: 8,
   },
   contactText: {
-    fontSize: 11,
+    fontSize: 12,
     fontFamily: 'Inter-Bold',
     color: '#FFFFFF',
   },
@@ -1149,30 +1262,30 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 8,
-    borderRadius: 8,
+    paddingVertical: 10,
+    borderRadius: 10,
     borderWidth: 1,
     borderColor: '#6366F1',
-    gap: 6,
+    gap: 8,
   },
   recruitText: {
-    fontSize: 11,
+    fontSize: 12,
     fontFamily: 'Inter-Bold',
     color: '#6366F1',
   },
   seasonActions: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 12,
+    gap: 16,
   },
   createButton: {
     backgroundColor: '#6366F1',
-    paddingHorizontal: 20,
-    paddingVertical: 10,
-    borderRadius: 10,
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 12,
   },
   createButtonText: {
-    fontSize: 14,
+    fontSize: 16,
     fontFamily: 'Inter-Bold',
     color: '#FFFFFF',
   },
@@ -1180,120 +1293,121 @@ const styles = StyleSheet.create({
     backgroundColor: '#10B981',
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    borderRadius: 10,
-    gap: 8,
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    borderRadius: 12,
+    gap: 10,
   },
   scheduleButtonText: {
-    fontSize: 14,
+    fontSize: 16,
     fontFamily: 'Inter-Bold',
     color: '#FFFFFF',
   },
   seasonsGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 20,
+    gap: isDesktop ? 32 : 20,
   },
   seasonCard: {
-    width: 180,
-    minWidth: 160,
-    height: 160,
-    borderRadius: 16,
-    padding: 20,
+    width: isDesktop ? 240 : 200,
+    height: 180,
+    borderRadius: 20,
+    padding: 24,
     justifyContent: 'space-between',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 12,
-    elevation: 4,
+    shadowOpacity: 0.12,
+    shadowRadius: 16,
+    elevation: 6,
   },
   seasonHeader: {
-    marginBottom: 12,
+    marginBottom: 16,
   },
   seasonName: {
-    fontSize: 20,
+    fontSize: 22,
     fontFamily: 'Inter-Bold',
     color: '#FFFFFF',
-    marginBottom: 6,
+    marginBottom: 8,
   },
   seasonDivision: {
-    fontSize: 13,
+    fontSize: 14,
     fontFamily: 'Inter-SemiBold',
     color: 'rgba(255, 255, 255, 0.9)',
   },
   seasonDate: {
-    fontSize: 13,
+    fontSize: 14,
     fontFamily: 'Inter-Regular',
     color: 'rgba(255, 255, 255, 0.8)',
-    marginBottom: 16,
+    marginBottom: 20,
   },
   seasonStats: {
-    gap: 6,
-    marginBottom: 16,
+    gap: 8,
+    marginBottom: 20,
   },
   seasonStat: {
-    fontSize: 13,
+    fontSize: 14,
     fontFamily: 'Inter-SemiBold',
     color: 'rgba(255, 255, 255, 0.9)',
   },
   seasonManageButton: {
     backgroundColor: 'rgba(255, 255, 255, 0.2)',
-    paddingVertical: 10,
-    borderRadius: 8,
+    paddingVertical: 12,
+    borderRadius: 12,
     alignItems: 'center',
   },
   seasonManageText: {
-    fontSize: 13,
+    fontSize: 14,
     fontFamily: 'Inter-Bold',
     color: '#FFFFFF',
   },
-  liveGamesContainer: {
-    gap: 16,
+  liveGamesGrid: {
+    flexDirection: isDesktop ? 'row' : 'column',
+    flexWrap: 'wrap',
+    gap: isDesktop ? 24 : 16,
   },
   liveGameCard: {
+    width: isDesktop ? (width - 320 - 80 - 48) / 2 : '100%',
     backgroundColor: '#FFFFFF',
-    borderRadius: 16,
-    padding: 20,
-    marginBottom: 16,
+    borderRadius: 20,
+    padding: 24,
     borderWidth: 1,
     borderColor: '#E5E7EB',
-    borderLeftWidth: 4,
+    borderLeftWidth: 6,
     borderLeftColor: '#EF4444',
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 8,
-    elevation: 2,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.08,
+    shadowRadius: 12,
+    elevation: 4,
   },
   liveGameHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 16,
+    marginBottom: 20,
   },
   liveIndicator: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#FEF2F2',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 12,
-    gap: 6,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 16,
+    gap: 8,
   },
   liveDot: {
-    width: 8,
-    height: 8,
+    width: 10,
+    height: 10,
     backgroundColor: '#EF4444',
-    borderRadius: 4,
+    borderRadius: 5,
   },
   liveText: {
-    fontSize: 12,
+    fontSize: 14,
     fontFamily: 'Inter-Bold',
     color: '#EF4444',
   },
   liveGamePeriod: {
-    fontSize: 14,
+    fontSize: 16,
     fontFamily: 'Inter-SemiBold',
     color: '#64748B',
   },
@@ -1301,48 +1415,48 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: 16,
+    marginBottom: 20,
   },
   liveTeamSection: {
     flex: 1,
     alignItems: 'center',
   },
   liveTeamName: {
-    fontSize: 16,
+    fontSize: 18,
     fontFamily: 'Inter-Bold',
     color: '#111827',
     textAlign: 'center',
-    marginBottom: 8,
+    marginBottom: 12,
   },
   liveTeamScore: {
-    fontSize: 32,
+    fontSize: 40,
     fontFamily: 'Inter-Bold',
     color: '#6366F1',
   },
   liveVs: {
-    fontSize: 14,
+    fontSize: 16,
     fontFamily: 'Inter-Bold',
     color: '#9CA3AF',
-    marginHorizontal: 16,
+    marginHorizontal: 20,
   },
   liveGameInfo: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 16,
+    marginBottom: 20,
   },
   liveGameTime: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
+    gap: 8,
   },
   liveTimeText: {
-    fontSize: 14,
+    fontSize: 16,
     fontFamily: 'Inter-SemiBold',
     color: '#64748B',
   },
   liveVenue: {
-    fontSize: 14,
+    fontSize: 16,
     fontFamily: 'Inter-Regular',
     color: '#6B7280',
   },
@@ -1352,59 +1466,133 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   liveGameStats: {
-    gap: 4,
+    gap: 6,
   },
   liveStatText: {
-    fontSize: 12,
+    fontSize: 14,
     fontFamily: 'Inter-Regular',
     color: '#6B7280',
   },
   scorekeeperButton: {
     backgroundColor: '#EF4444',
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 8,
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    borderRadius: 12,
   },
   scorekeeperButtonText: {
-    fontSize: 14,
+    fontSize: 16,
     fontFamily: 'Inter-Bold',
     color: '#FFFFFF',
   },
   refreshButton: {
     backgroundColor: '#F3F4F6',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 8,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: 12,
   },
   refreshText: {
-    fontSize: 14,
+    fontSize: 16,
     fontFamily: 'Inter-SemiBold',
     color: '#6B7280',
   },
   loadingContainer: {
     backgroundColor: '#FFFFFF',
-    borderRadius: 16,
-    padding: 40,
+    borderRadius: 20,
+    padding: 48,
     alignItems: 'center',
     borderWidth: 1,
     borderColor: '#E5E7EB',
   },
   loadingText: {
-    fontSize: 16,
+    fontSize: 18,
     fontFamily: 'Inter-Regular',
     color: '#6B7280',
   },
   noLiveGames: {
     backgroundColor: '#FFFFFF',
-    borderRadius: 16,
-    padding: 40,
+    borderRadius: 20,
+    padding: 48,
     alignItems: 'center',
     borderWidth: 1,
     borderColor: '#E5E7EB',
   },
   noLiveGamesText: {
-    fontSize: 16,
+    fontSize: 18,
     fontFamily: 'Inter-Regular',
     color: '#6B7280',
+  },
+  quickActionsSection: {
+    marginBottom: 48,
+  },
+  quickActionsGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: isDesktop ? 24 : 16,
+  },
+  quickActionCard: {
+    width: isDesktop ? (width - 320 - 80 - 72) / 4 : '48%',
+    backgroundColor: '#FFFFFF',
+    borderRadius: 20,
+    padding: 24,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.08,
+    shadowRadius: 12,
+    elevation: 4,
+  },
+  quickActionTitle: {
+    fontSize: 18,
+    fontFamily: 'Inter-Bold',
+    color: '#111827',
+    marginTop: 16,
+    marginBottom: 8,
+    textAlign: 'center',
+  },
+  quickActionSubtitle: {
+    fontSize: 14,
+    fontFamily: 'Inter-Regular',
+    color: '#6B7280',
+    textAlign: 'center',
+  },
+  analyticsGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: isDesktop ? 24 : 16,
+  },
+  analyticsCard: {
+    width: isDesktop ? (width - 320 - 80 - 72) / 4 : '48%',
+    backgroundColor: '#FFFFFF',
+    borderRadius: 20,
+    padding: 24,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.08,
+    shadowRadius: 12,
+    elevation: 4,
+  },
+  analyticsTitle: {
+    fontSize: 16,
+    fontFamily: 'Inter-SemiBold',
+    color: '#6B7280',
+    marginBottom: 12,
+    textAlign: 'center',
+  },
+  analyticsValue: {
+    fontSize: 32,
+    fontFamily: 'Inter-Bold',
+    color: '#111827',
+    marginBottom: 8,
+  },
+  analyticsSubtitle: {
+    fontSize: 14,
+    fontFamily: 'Inter-Regular',
+    color: '#16A34A',
+    textAlign: 'center',
   },
 });
