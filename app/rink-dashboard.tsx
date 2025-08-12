@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Dimensions, TextInput } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Home, Users, Calendar, Settings, LogOut, Plus, Search, Filter, Bell, ChevronDown, Building, Trophy, UserCheck, RotateCcw, Eye, Star, Shield, MapPin, Mail, Phone, Play, Clock, BarChart3, TrendingUp, AlertCircle } from 'lucide-react-native';
+import { Chrome as Home, Users, Calendar, Settings, LogOut, Plus, Search, Filter, Bell, ChevronDown, Building, Trophy, UserCheck, RotateCcw, Eye, Star, Shield, MapPin, Mail, Phone, Play, Clock, ChartBar as BarChart3, TrendingUp, CircleAlert as AlertCircle } from 'lucide-react-native';
 import { router } from 'expo-router';
 import { AuthGuard } from '@/components/AuthGuard';
 import { useAuth } from '@/contexts/AuthContext';
@@ -1552,20 +1552,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   seasonManageText: {
-    fontSize: 14,
-    fontFamily: 'Inter-Bold',
-    color: '#FFFFFF',
-  },
-  substituteButton: {
-    backgroundColor: '#8B5CF6',
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 12,
-    gap: 8,
-  },
-  substituteButtonText: {
     fontSize: 14,
     fontFamily: 'Inter-Bold',
     color: '#FFFFFF',
