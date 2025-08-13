@@ -10,13 +10,5 @@ module.exports = function (api) {
         },
       ],
     ],
-    plugins: [
-      [
-        '@babel/plugin-transform-modules-commonjs',
-        {
-          exclude: ['react', 'react-dom'],
-        },
-      ],
-    ],
   };
 };
