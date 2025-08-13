@@ -31,6 +31,12 @@ export default function LoginScreen() {
     return true;
   };
 
+  const handleLogin = async () => {
+    if (!validateForm()) return;
+    
+    setIsLoading(true);
+    try {
+      await login(form.email, form.password);
     } catch (error) {
       Alert.alert('Error', error instanceof Error ? error.message : 'Login failed');
     } finally {
