@@ -1,0 +1,22 @@
+module.exports = function (api) {
+  api.cache(true);
+  return {
+    presets: [
+      [
+        'babel-preset-expo',
+        {
+          jsxImportSource: 'react',
+          jsxRuntime: 'automatic',
+        },
+      ],
+    ],
+    plugins: [
+      [
+        '@babel/plugin-transform-modules-commonjs',
+        {
+          exclude: ['react', 'react-dom'],
+        },
+      ],
+    ],
+  };
+};
