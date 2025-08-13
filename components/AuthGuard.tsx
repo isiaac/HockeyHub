@@ -22,9 +22,9 @@ export function AuthGuard({ children, requireAuth = true, allowedRoles }: AuthGu
     if (user && allowedRoles && !allowedRoles.includes(user.role)) {
       // Redirect to appropriate dashboard based on role
       if (user.role === 'rink_owner' || user.role === 'rink_admin') {
-        router.replace('/rink-dashboard');
+        router.push('/rink-dashboard');
       } else {
-        router.replace('/(tabs)');
+        router.push('/(tabs)');
       }
     }
   }, [user, allowedRoles]);

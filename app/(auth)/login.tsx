@@ -31,19 +31,6 @@ export default function LoginScreen() {
     return true;
   };
 
-  const handleLogin = async () => {
-    if (!validateForm()) return;
-
-    try {
-      setIsLoading(true);
-      await login(form.email, form.password);
-      
-      // Redirect based on user type (this will be handled by auth context)
-      if (form.email.includes('rink')) {
-        router.replace('/rink-dashboard');
-      } else {
-        router.replace('/(tabs)');
-      }
     } catch (error) {
       Alert.alert('Error', error instanceof Error ? error.message : 'Login failed');
     } finally {

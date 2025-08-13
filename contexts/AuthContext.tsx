@@ -55,13 +55,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       // Mock login response
       const mockUser: User = {
         id: 'user-1',
-        name: email.includes('rink') ? 'John Smith' : 'Alex Chen',
+        name: email.includes('rink') || email.includes('admin') ? 'John Smith' : 'Alex Chen',
         email: email,
-        role: email.includes('rink') ? 'rink_owner' : 'player',
+        role: email.includes('rink') || email.includes('admin') ? 'rink_owner' : 'player',
         createdAt: new Date().toISOString(),
       };
       
       setUser(mockUser);
+      
+      // Auto-redirect based on role
+      setTimeout(() => {
+        if (mockUser.role === 'rink_owner' || mockUser.role === 'rink_admin') {
+          router.push('/rink-dashboard');
+        } else {
+          router.push('/(tabs)');
+        }
+      }, 100);
     } catch (error) {
       throw new Error('Invalid credentials');
     } finally {
