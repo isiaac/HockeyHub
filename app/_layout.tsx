@@ -45,6 +45,9 @@ export default function RootLayout() {
         <Stack.Screen name="booking-request" />
         <Stack.Screen name="schedule-game" />
         <Stack.Screen name="substitute-manager" />
+        <Stack.Screen name="payments" />
+        <Stack.Screen name="payment-receipt" />
+        <Stack.Screen name="stripe-onboarding" />
         <Stack.Screen name="+not-found" />
       </Stack>
       <StatusBar style="auto" />

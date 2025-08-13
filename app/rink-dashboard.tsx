@@ -262,6 +262,7 @@ export default function RinkDashboard() {
     { id: 'teams', label: 'Teams', icon: Users },
     { id: 'substitutes', label: 'Substitutes', icon: UserCheck },
     { id: 'live-games', label: 'Live Games', icon: Play },
+    { id: 'payments', label: 'Payments', icon: DollarSign, route: '/payments' },
     { id: 'schedule', label: 'Schedule', icon: Calendar, route: '/schedule' },
     { id: 'settings', label: 'Settings', icon: Settings },
   ];
