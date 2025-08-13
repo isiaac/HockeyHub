@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Share } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router, useLocalSearchParams } from 'expo-router';
-import { ArrowLeft, Download, Share2, CheckCircle, Receipt, Calendar, CreditCard, Building, User } from 'lucide-react-native';
+import { ArrowLeft, Download, Share2, CircleCheck as CheckCircle, Receipt, Calendar, CreditCard, Building, User } from 'lucide-react-native';
 import { Payment } from '@/types/payments';
 import { StripeService } from '@/services/stripeService';
 

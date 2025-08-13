@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router, useLocalSearchParams } from 'expo-router';
-import { ArrowLeft, CreditCard, Building, CheckCircle, ExternalLink, Shield, DollarSign, Users, BarChart3 } from 'lucide-react-native';
+import { ArrowLeft, CreditCard, Building, CircleCheck as CheckCircle, ExternalLink, Shield, DollarSign, Users, ChartBar as BarChart3 } from 'lucide-react-native';
 import { PaymentAccount } from '@/types/payments';
 import { StripeService } from '@/services/stripeService';
 
