@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { router, useLocalSearchParams } from 'expo-router';
+import { useRouter, useLocalSearchParams } from 'expo-router';
 import { ArrowLeft, User, Building, Mail, Phone, MapPin, Calendar, Users, Shield } from 'lucide-react-native';
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -38,6 +38,7 @@ const positions = [
 export default function RegisterScreen() {
   const { userType } = useLocalSearchParams();
   const { register } = useAuth();
+  const router = useRouter();
   const isPlayer = userType === 'player';
   
   const [playerForm, setPlayerForm] = useState<PlayerRegistrationForm>({

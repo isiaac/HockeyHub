@@ -64,15 +64,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       };
       
       setUser(mockUser);
-      
-      // Auto-redirect based on role
-      setTimeout(() => {
-        if (mockUser.role === 'rink_owner' || mockUser.role === 'rink_admin') {
-          router.push('/rink-dashboard');
-        } else {
-          router.push('/(tabs)');
-        }
-      }, 100);
     } catch (error) {
       throw new Error('Invalid credentials');
     } finally {
