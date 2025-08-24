@@ -3,10 +3,9 @@ module.exports = function (api) {
   return {
     presets: ['babel-preset-expo'],
     plugins: [
-      ['@babel/plugin-transform-modules-commonjs', {
-        allowTopLevelThis: true,
-        loose: true
-      }]
-    ]
+      'expo-router/babel',
+      // Reanimated plugin must be listed last
+      'react-native-reanimated/plugin',
+    ],
   };
 };
