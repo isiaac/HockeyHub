@@ -17,7 +17,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     // Check for existing session
-    checkAuthState();
+    checkAuthState().catch((error) => {
+      console.error('Failed to check auth state:', error);
+    });
   }, []);
 
   const checkAuthState = async () => {
