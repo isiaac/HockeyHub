@@ -67,6 +67,13 @@ export default function ProfileScreen() {
       icon: <Settings size={20} color="#64748B" />,
       onPress: () => Alert.alert('Coming Soon', 'App settings will be available soon'),
     },
+    {
+      id: 'app-overview',
+      title: 'App Overview',
+      subtitle: 'View all app pages and features',
+      icon: <Settings size={20} color="#64748B" />,
+      onPress: () => router.push('/app-overview'),
+    },
   ];
 
   return (

@@ -48,6 +48,7 @@ export default function RootLayout() {
         <Stack.Screen name="payments" />
         <Stack.Screen name="payment-receipt" />
         <Stack.Screen name="stripe-onboarding" />
+        <Stack.Screen name="app-overview" />
         <Stack.Screen name="+not-found" />
       </Stack>
       <StatusBar style="auto" />
