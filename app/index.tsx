@@ -1,11 +1,9 @@
-import { useEffect } from 'react';
-import { router } from 'expo-router';
+import { Redirect, useRootNavigationState } from 'expo-router';
 
 export default function Index() {
-  useEffect(() => {
-    // Redirect to login - auth context will handle role-based routing
-    router.replace('/(auth)/login');
-  }, []);
+  // Wait for the root navigator to mount before redirecting
+  const state = useRootNavigationState();
+  if (!state?.key) return null;
 
-  return null;
+  return <Redirect href="/(auth)/login" />;
 }
