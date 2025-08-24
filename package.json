@@ -7,7 +7,7 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "dev": "EXPO_NO_TELEMETRY=1 expo start --web --port 8081",
+    "dev": "EXPO_NO_TELEMETRY=1 npx expo start --web --port 8081",
     "build:web": "expo export --platform web",
     "lint": "expo lint"
   },
