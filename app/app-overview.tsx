@@ -2,11 +2,7 @@ import React from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Dimensions } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
-import { 
-  Users, Building, Calendar, MessageSquare, Trophy, Store, Award, User, 
-  CreditCard, MapPin, Clock, UserCheck, DollarSign, Receipt, Settings,
-  Play, Eye, Send, Plus, ArrowRight, Home
-} from 'lucide-react-native';
+import { Users, Building, Calendar, MessageSquare, Trophy, Store, Award, User, CreditCard, MapPin, Clock, UserCheck, DollarSign, Receipt, Settings, Play, Eye, Send, Plus, ArrowRight, Chrome as Home } from 'lucide-react-native';
 
 const { width } = Dimensions.get('window');
 const isTablet = width >= 768;
